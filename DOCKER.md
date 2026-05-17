@@ -20,7 +20,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/example/nfo-to-vsmeta.git
+git clone https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA.git
 cd nfo-to-vsmeta
 
 # 构建生产镜像
@@ -459,7 +459,7 @@ docker pull nfo-to-vsmeta:latest
 
 1. 查看本文档的故障排除部分
 2. 查看 [常见问题](../README.md#常见问题)
-3. 创建 [Issue](https://github.com/example/nfo-to-vsmeta/issues)
+3. 创建 [Issue](https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA/issues)
 
 ---
 
