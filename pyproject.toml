@@ -87,9 +87,6 @@ nfo_to_vsmeta_converter_complete = [
     "plugins/**/*.py",
 ]
 
-[tool.setuptools.package-dir]
-"" = "."
-
 [tool.setuptools.package-find]
 include = ["plugins*", "tests*"]
 
