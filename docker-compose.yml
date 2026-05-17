@@ -1,0 +1,78 @@
+# NFO to VSMETA Converter - Docker Compose Configuration
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # 主程序服务
+  # ==========================================================================
+  converter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: nfo-to-vsmeta-converter
+    restart: unless-stopped
+    volumes:
+      # 挂载影片目录（只读）
+      - ./movies:/data/movies:ro
+      # 输出目录
+      - ./output:/data/output
+    environment:
+      - TZ=Asia/Shanghai
+    command: ["-d", "/data/movies", "-o", "/data/output"]
+    networks:
+      - nfo-network
+
+  # ==========================================================================
+  # Web UI 服务
+  # ==========================================================================
+  webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: nfo-to-vsmeta-webui
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      # 挂载影片目录
+      - ./movies:/data/movies:ro
+      # 输出目录
+      - ./output:/data/output
+      # 配置目录
+      - ./config:/app/config
+    environment:
+      - TZ=Asia/Shanghai
+      - FLASK_ENV=production
+    networks:
+      - nfo-network
+    depends_on:
+      - converter
+
+  # ==========================================================================
+  # 开发环境
+  # ==========================================================================
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: nfo-to-vsmeta-dev
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - TZ=Asia/Shanghai
+      - FLASK_ENV=development
+    networks:
+      - nfo-network
+    command: python -i
+
+# ==============================================================================
+# 网络配置
+# ==============================================================================
+networks:
+  nfo-network:
+    driver: bridge

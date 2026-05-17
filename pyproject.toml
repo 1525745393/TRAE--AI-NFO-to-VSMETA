@@ -11,7 +11,10 @@ license = {text = "MIT"}
 authors = [
     {name = "AI Assistant", email = "assistant@example.com"}
 ]
-keywords = ["nfo", "vsmeta", "kodi", "synology", "video-station", "metadata", "converter"]
+maintainers = [
+    {name = "NFO to VSMETA Team", email = "support@example.com"}
+]
+keywords = ["nfo", "vsmeta", "kodi", "synology", "video-station", "metadata", "converter", "xbmc"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: End Users/Desktop",
@@ -24,11 +27,23 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Environment :: Web Environment",
 ]
 requires-python = ">=3.8"
 dependencies = []
 
 [project.optional-dependencies]
+# 完整功能
+all = [
+    "Pillow>=9.0.0",
+    "tqdm>=4.60.0",
+    "colorama>=0.4.4",
+    "readchar>=2.0.0",
+    "watchdog>=3.0.0",
+    "Flask>=2.0.0",
+]
 # 图片处理
 image = ["Pillow>=9.0.0"]
 # 进度条
@@ -46,16 +61,8 @@ dev = [
     "black>=22.0.0",
     "mypy>=0.950",
     "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
     "flake8>=4.0.0",
-]
-# 所有可选依赖
-all = [
-    "Pillow>=9.0.0",
-    "tqdm>=4.60.0",
-    "colorama>=0.4.4",
-    "readchar>=2.0.0",
-    "watchdog>=3.0.0",
-    "Flask>=2.0.0",
 ]
 
 [project.urls]
@@ -63,6 +70,7 @@ Homepage = "https://github.com/example/nfo-to-vsmeta"
 Documentation = "https://github.com/example/nfo-to-vsmeta#readme"
 Repository = "https://github.com/example/nfo-to-vsmeta.git"
 Issues = "https://github.com/example/nfo-to-vsmeta/issues"
+Changelog = "https://github.com/example/nfo-to-vsmeta/blob/main/CHANGELOG.md"
 
 [project.scripts]
 nfo-to-vsmeta = "nfo_to_vsmeta_converter_complete:main"
@@ -70,12 +78,20 @@ nfo-vsmeta-web = "web_ui:main"
 
 [tool.setuptools]
 packages = ["nfo_to_vsmeta_converter_complete"]
+package-dir = {"" = "."}
 
 [tool.setuptools.package-data]
 nfo_to_vsmeta_converter_complete = [
     "plugins/*.py",
     "plugins/configs/*.json",
+    "plugins/**/*.py",
 ]
+
+[tool.setuptools.package-dir]
+"" = "."
+
+[tool.setuptools.package-find]
+include = ["plugins*", "tests*"]
 
 [tool.black]
 line-length = 100
@@ -97,17 +113,22 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 ignore_missing_imports = true
+exclude = ["tests/", "docs/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
 
 [tool.coverage.run]
 source = ["nfo_to_vsmeta_converter_complete"]
-omit = ["*/tests/*", "*/test_*.py"]
+omit = ["*/tests/*", "*/test_*.py", "*/__pycache__/*"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -116,4 +137,24 @@ exclude_lines = [
     "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
+    "@abstractmethod",
 ]
+show_missing = true
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.pylint.messages_control]
+disable = [
+    "C0111",  # missing-docstring
+    "C0103",  # invalid-name
+    "R0913",  # too-many-arguments
+    "R0914",  # too-many-locals
+]
+max-line-length = 100

@@ -1,0 +1,74 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Documentation
+*.md
+docs/_build/
+docs/.build/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.docker/
+
+# Project specific
+*.log
+*.pkl
+*.json.bak
+*.backup/
+reports/
+output/
+backup/
+logs/
+*.tmp
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Development
+*.bak
+*.orig
+*.rej
+*.tmp
+
+# Local configuration
+config.local.json
+.env.local
