@@ -77,7 +77,7 @@ nfo-to-vsmeta = "nfo_to_vsmeta_converter_complete:main"
 nfo-vsmeta-web = "web_ui:main"
 
 [tool.setuptools]
-packages = ["nfo_to_vsmeta_converter_complete"]
+py-modules = ["nfo_to_vsmeta_converter_complete", "web_ui", "single_file_converter_optimized_fixed"]
 package-dir = {"" = "."}
 
 [tool.setuptools.package-data]
@@ -86,9 +86,6 @@ nfo_to_vsmeta_converter_complete = [
     "plugins/configs/*.json",
     "plugins/**/*.py",
 ]
-
-[tool.setuptools.package-find]
-include = ["plugins*", "tests*"]
 
 [tool.black]
 line-length = 100
