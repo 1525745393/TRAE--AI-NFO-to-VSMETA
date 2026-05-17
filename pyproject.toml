@@ -64,13 +64,22 @@ dev = [
     "pytest-cov>=4.0.0",
     "flake8>=4.0.0",
 ]
+# 测试工具
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "flake8>=4.0.0",
+    "bandit>=1.7.0",
+    "safety>=2.0.0",
+    "isort>=5.10.0",
+]
 
 [project.urls]
-Homepage = "https://github.com/example/nfo-to-vsmeta"
-Documentation = "https://github.com/example/nfo-to-vsmeta#readme"
-Repository = "https://github.com/example/nfo-to-vsmeta.git"
-Issues = "https://github.com/example/nfo-to-vsmeta/issues"
-Changelog = "https://github.com/example/nfo-to-vsmeta/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA"
+Documentation = "https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA#readme"
+Repository = "https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA.git"
+Issues = "https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA/issues"
+Changelog = "https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA/blob/main/CHANGELOG.md"
 
 [project.scripts]
 nfo-to-vsmeta = "nfo_to_vsmeta_converter_complete:main"

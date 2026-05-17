@@ -5,6 +5,9 @@
 [![版本](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA)
 [![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
 [![许可](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-pytest-orange)](tests/)
+[![Code Quality](https://img.shields.io/badge/code%20quality-flake8%20%7C%20bandit%20%7C%20safety-purple)](.github/workflows/ci.yml)
 
 **将 Kodi/XBMC 格式的 NFO 元数据文件转换为群晖 Video Station 的 VSMETA 格式**
 
@@ -389,12 +392,72 @@ nfo-to-vsmeta/
 
 ### 运行测试
 
-```bash
-# 测试插件系统
-python test_plugins.py
+项目使用 `pytest` 进行测试，包含单元测试和集成测试。
 
-# 测试主程序
-python nfo_to_vsmeta_converter_complete.py -d /path/to/test --dry-run
+```bash
+# 安装测试依赖
+pip install -e ".[test]"
+
+# 运行所有测试
+pytest -v
+
+# 运行特定测试文件
+pytest tests/test_config.py -v
+pytest tests/test_plugin_system.py -v
+pytest tests/test_integration.py -v
+
+# 运行测试并生成覆盖率报告
+pytest --cov=. --cov-report=html
+```
+
+### 代码质量检查
+
+项目集成了多个代码质量检查工具：
+
+```bash
+# 安装开发依赖
+pip install -e ".[test]"
+
+# Flake8 代码风格检查
+flake8 .
+
+# Bandit 安全检查
+bandit -r .
+
+# Safety 依赖安全检查
+safety check
+
+# Isort 导入排序
+isort .
+
+# 运行所有质量检查（CI 流程）
+pytest tests/ -v
+flake8 .
+bandit -r .
+```
+
+### CI/CD 流程
+
+项目使用 GitHub Actions 实现自动化 CI/CD 流程：
+
+- **测试**: 多 Python 版本（3.8-3.12）测试
+- **代码质量**: Flake8、Bandit、Safety 检查
+- **构建**: 自动构建 PyPI 包
+- **发布**: 自动发布到 Test PyPI
+
+查看完整配置: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+### 手动构建和发布
+
+```bash
+# 构建 PyPI 包
+python -m build
+
+# 发布到 Test PyPI
+twine upload --repository testpypi dist/*
+
+# 发布到正式 PyPI
+twine upload dist/*
 ```
 
 ---
