@@ -68,10 +68,17 @@
 - **状态**: ✅ 已发布
 
 ### 4. Docker 支持
-- **Dockerfile**: ✅ 已创建（多阶段构建）
-- **docker-compose.yml**: ✅ 已配置
-- **文档**: ✅ 完整指南
-- **状态**: ⏳ 等待用户本地构建
+- **Dockerfile**: ✅ 已创建（多阶段构建优化）
+- **docker-compose.yml**: ✅ 已配置完整服务
+- **build_docker.sh**: ✅ 自动化构建脚本
+- **文档**: ✅ DOCKER.md 和 DOCKER_BUILD.md 完整指南
+- **状态**: ✅ 已准备就绪，用户可在本地构建
+
+#### Docker 快速构建命令:
+```bash
+cd TRAE--AI-NFO-to-VSMETA
+./build_docker.sh
+```
 
 ---
 
