@@ -174,7 +174,7 @@ def open_documentation():
                 os.startfile(str(readme_path))
             else:
                 subprocess.run(['xdg-open', str(readme_path)])
-        except:
+        except Exception:
             print(f"请手动打开文件: {readme_path.absolute()}")
     else:
         print("未找到 README.md")

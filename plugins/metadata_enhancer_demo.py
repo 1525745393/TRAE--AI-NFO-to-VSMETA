@@ -20,8 +20,7 @@
 import logging
 import os
 import re
-from abc import ABC, abstractmethod
-from typing import Optional
+from abc import ABC
 
 
 class MetadataEnhancerDemoPlugin(ABC):

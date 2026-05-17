@@ -2366,9 +2366,9 @@ class PluginManager:
                 filepath = os.path.join(self._plugin_dir, filename)
                 try:
                     with open(filepath, 'rb') as f:
-                        self._file_hashes[filepath] = hashlib.md5(f.read()).hexdigest()
-                except Exception:
-                    pass
+                        self._file_hashes[filepath] = hashlib.md5(f.read(), usedforsecurity=False).hexdigest()
+                except Exception as e:
+                    logger.debug(f"计算文件哈希失败 {filepath}: {e}")
     
     def _handle_file_change(self, filepath: str, is_new: bool = False) -> None:
         """
@@ -2381,8 +2381,9 @@ class PluginManager:
         # 防抖：检查内容是否真的改变
         try:
             with open(filepath, 'rb') as f:
-                current_hash = hashlib.md5(f.read()).hexdigest()
-        except Exception:
+                current_hash = hashlib.md5(f.read(), usedforsecurity=False).hexdigest()
+        except Exception as e:
+            logger.debug(f"读取文件哈希失败 {filepath}: {e}")
             return
         
         if not is_new and self._file_hashes.get(filepath) == current_hash:

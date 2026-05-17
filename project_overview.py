@@ -7,7 +7,6 @@ NFO to VSMETA 转换器 - 项目概览
 """
 
 import os
-import sys
 from pathlib import Path
 
 
@@ -16,7 +15,7 @@ def count_lines(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             return sum(1 for line in f)
-    except:
+    except Exception:
         return 0
 
 
@@ -24,7 +23,7 @@ def get_size(file_path):
     """获取文件大小（KB）"""
     try:
         return round(os.path.getsize(file_path) / 1024, 1)
-    except:
+    except Exception:
         return 0
 
 
