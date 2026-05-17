@@ -9,7 +9,7 @@
 git clone https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA.git
 cd TRAE--AI-NFO-to-VSMETA
 
-# 2. 运行完整发布脚本（推荐）
+# 2. 运行完整发布脚本（推荐）- 支持 Docker Hub 和 GHCR！
 ./publish_docker.sh
 
 # 或者只是构建（不发布）
@@ -45,6 +45,46 @@ docker-compose up -d webui
 
 ---
 
+## 🔄 发布到 Docker Hub
+
+### 第 1 步：在 Docker Hub 创建仓库
+1. 访问 https://hub.docker.com/repositories/create
+2. 仓库名称: `nfo-to-vsmeta`
+3. 可见度: 选择 **Public（公开）**
+4. 点击 **Create**
+
+### 第 2 步：使用发布脚本
+```bash
+./publish_docker.sh
+# 选择选项 1（Docker Hub）
+```
+
+### 手动发布到 Docker Hub
+```bash
+# 登录
+docker login -u your-dockerhub-username
+
+# 构建并标记
+docker build -t nfo-to-vsmeta:2.0.1 .
+docker tag nfo-to-vsmeta:2.0.1 your-username/nfo-to-vsmeta:2.0.1
+docker tag nfo-to-vsmeta:2.0.1 your-username/nfo-to-vsmeta:latest
+
+# 推送
+docker push your-username/nfo-to-vsmeta:2.0.1
+docker push your-username/nfo-to-vsmeta:latest
+```
+
+### 使用 Docker Hub 镜像
+```bash
+# 拉取镜像
+docker pull your-username/nfo-to-vsmeta:latest
+
+# 运行
+docker run --rm your-username/nfo-to-vsmeta:latest --help
+```
+
+---
+
 ## 🔄 发布到 GitHub Container Registry
 
 ### 准备 GitHub Personal Access Token (PAT)
@@ -56,9 +96,10 @@ docker-compose up -d webui
 ```bash
 export GITHUB_TOKEN="your-token-here"
 ./publish_docker.sh
+# 选择选项 2（GHCR）
 ```
 
-### 手动发布
+### 手动发布到 GHCR
 ```bash
 # 登录
 echo "your-token" | docker login ghcr.io -u 1525745393 --password-stdin
@@ -73,7 +114,7 @@ docker push ghcr.io/1525745393/nfo-to-vsmeta:2.0.1
 docker push ghcr.io/1525745393/nfo-to-vsmeta:latest
 ```
 
-### 使用发布后的镜像：
+### 使用 GHCR 镜像
 ```bash
 # 拉取镜像
 docker pull ghcr.io/1525745393/nfo-to-vsmeta:latest
@@ -88,6 +129,7 @@ docker run --rm ghcr.io/1525745393/nfo-to-vsmeta:latest --help
 
 | 文档 | 内容 |
 |------|------|
+| **QUICKSTART_DOCKER.md** 🆕 | 本文件 - Docker 快速参考 |
 | **DOCKER.md** | Docker 详细使用指南 |
 | **DOCKER_BUILD.md** | Docker 构建发布详细指南 |
 | **PROJECT_COMPLETE.md** | 完整项目总结 |
@@ -106,4 +148,5 @@ docker run --rm ghcr.io/1525745393/nfo-to-vsmeta:latest --help
 ## 📖 完整功能
 
 **NFO to VSMETA 转换器 v2.0.1 🎉
+
 
