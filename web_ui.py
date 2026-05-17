@@ -311,13 +311,16 @@ def handle_exception(e: Exception) -> Tuple:
     logger.error(f'未捕获异常: {e}', exc_info=True)
     return jsonify({'error': '服务器内部错误', 'detail': str(e) if app.debug else '请查看服务器日志'}), 500
 
+
 @app.errorhandler(400)
 def handle_bad_request(e) -> Tuple:
     return jsonify({'error': '请求参数错误', 'detail': str(e)}), 400
 
+
 @app.errorhandler(404)
 def handle_not_found(e) -> Tuple:
     return jsonify({'error': '资源不存在'}), 404
+
 
 @app.errorhandler(405)
 def handle_method_not_allowed(e) -> Tuple:
@@ -930,7 +933,6 @@ def api_smart_parse() -> Tuple:
         return jsonify({'error': '命令不能为空'}), 400
 
     try:
-        from nfo_to_vsmeta_converter_complete import Config
         config_updates = {}
         message_parts = []
 
@@ -1772,7 +1774,7 @@ def main() -> None:
 
     if args.token:
         _state['api_token'] = args.token
-        print(f"⚠️  API 认证已启用")
+        print("⚠️  API 认证已启用")
     if args.host == '0.0.0.0' and not args.token:
         print("⚠️  警告: 绑定 0.0.0.0 且未设置 API Token，建议使用 --token")
 

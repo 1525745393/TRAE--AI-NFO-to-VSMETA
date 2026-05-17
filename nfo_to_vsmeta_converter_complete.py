@@ -136,11 +136,8 @@ except ImportError:
 try:
     from rich.console import Console
     from rich.table import Table
-    from rich.panel import Panel
     from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn, MofNCompleteColumn
-    from rich.tree import Tree
     from rich.logging import RichHandler
-    from rich.text import Text
     from rich import box
     HAS_RICH = True
 except ImportError:
@@ -2928,12 +2925,10 @@ class NFOToVSMETAConverter:
         Returns:
             处理结果字典
         """
-        filepath = os.path.join(directory, filename)
-
         for attempt in range(self.config.retry_attempts):
             try:
                 return self._process_single_file(directory, filename)
-            except Exception as e:
+            except Exception:
                 if attempt < self.config.retry_attempts - 1:
                     logger.warning(f"重试 {filename} ({attempt + 1}/{self.config.retry_attempts})")
                     # 指数退避
@@ -3327,7 +3322,7 @@ th{{background:#f2f2f2;}}</style></head><body>
                 error_types[detail['result']] = error_types.get(detail['result'], 0) + 1
 
         # 构建纯文本内容
-        txt_lines = [f"智能分析报告", f"{'=' * 50}", "处理概况:",
+        txt_lines = ["智能分析报告", "=" * 50, "处理概况:",
                      f"- 总文件数: {self.stats.total_files}",
                      f"- 成功率: {self.stats.success_rate:.1f}%",
                      "", "失败原因分布:"]
@@ -3426,6 +3421,8 @@ def _prompt_int(prompt: str, default: int, min_val: int = None, max_val: int = N
     except ValueError:
         return default
 
+
+
 def _prompt_float(prompt: str, default: float, min_val: float = None, max_val: float = None) -> float:
     """带验证的浮点数输入"""
     value = input(f"{prompt}（默认 {default}）: ").strip()
@@ -3440,6 +3437,8 @@ def _prompt_float(prompt: str, default: float, min_val: float = None, max_val: f
         return result
     except ValueError:
         return default
+
+
 
 def interactive_config_with_validation() -> Config:
     """
@@ -4100,11 +4099,11 @@ def main():
                 description=args.plugin_description,
                 priority=args.plugin_priority
             )
-            print(f"\n{'='*50}")
-            print(f"✅ 插件模板创建成功!")
+            print(f"\n{'=' * 50}")
+            print("✅ 插件模板创建成功!")
             print(f"📁 路径: {path}")
             print(f"📝 类型: {args.plugin_type}")
-            print(f"{'='*50}\n")
+            print('=' * 50 + "\n")
         except Exception as e:
             print(f"\n❌ 创建插件模板失败: {e}\n")
             sys.exit(1)
@@ -4354,11 +4353,11 @@ def main():
                 else:
                     print(f"\n{Fore.YELLOW}当前没有已注册的插件{Style.RESET_ALL}")
 
-                print(f"\n操作选项:")
-                print(f"  1. 从目录加载插件")
-                print(f"  2. 列出所有插件")
-                print(f"  3. 卸载插件")
-                print(f"  0. 返回主菜单")
+                print("\n操作选项:")
+                print("  1. 从目录加载插件")
+                print("  2. 列出所有插件")
+                print("  3. 卸载插件")
+                print("  0. 返回主菜单")
 
                 choice = input(f"\n{Fore.CYAN}>> {Style.RESET_ALL}请选择操作: ").strip()
 
