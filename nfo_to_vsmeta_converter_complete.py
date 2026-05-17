@@ -2097,9 +2097,12 @@ class PluginManager:
         """
         return self._plugins.get(name)
     
-    def list_plugins(self) -> List[Dict]:
+    def list_plugins(self, sort_by_priority: bool = True) -> List[Dict]:
         """
         列出所有已注册插件的信息
+        
+        Args:
+            sort_by_priority: 是否按优先级排序，默认 True
         
         Returns:
             插件信息列表
@@ -2129,6 +2132,10 @@ class PluginManager:
             except Exception:
                 info['config_schema'] = {}
             result.append(info)
+        
+        if sort_by_priority:
+            result.sort(key=lambda x: (-x['priority'], x['name']))
+        
         return result
     
     def get_plugin_config(self, name: str) -> Optional['PluginConfig']:
