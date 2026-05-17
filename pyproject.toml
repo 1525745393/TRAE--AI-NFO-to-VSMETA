@@ -1,0 +1,119 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nfo-to-vsmeta"
+version = "2.0.1"
+description = "将 Kodi/XBMC 格式的 NFO 元数据文件转换为群晖 Video Station 的 VSMETA 格式"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "AI Assistant", email = "assistant@example.com"}
+]
+keywords = ["nfo", "vsmeta", "kodi", "synology", "video-station", "metadata", "converter"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia :: Video",
+    "Topic :: System :: Archiving",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+# 图片处理
+image = ["Pillow>=9.0.0"]
+# 进度条
+progress = ["tqdm>=4.60.0"]
+# 彩色输出
+color = ["colorama>=0.4.4"]
+# 交互菜单
+interactive = ["readchar>=2.0.0"]
+# 热重载
+hotreload = ["watchdog>=3.0.0"]
+# Web UI
+web = ["Flask>=2.0.0"]
+# 开发工具
+dev = [
+    "black>=22.0.0",
+    "mypy>=0.950",
+    "pytest>=7.0.0",
+    "flake8>=4.0.0",
+]
+# 所有可选依赖
+all = [
+    "Pillow>=9.0.0",
+    "tqdm>=4.60.0",
+    "colorama>=0.4.4",
+    "readchar>=2.0.0",
+    "watchdog>=3.0.0",
+    "Flask>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/nfo-to-vsmeta"
+Documentation = "https://github.com/example/nfo-to-vsmeta#readme"
+Repository = "https://github.com/example/nfo-to-vsmeta.git"
+Issues = "https://github.com/example/nfo-to-vsmeta/issues"
+
+[project.scripts]
+nfo-to-vsmeta = "nfo_to_vsmeta_converter_complete:main"
+nfo-vsmeta-web = "web_ui:main"
+
+[tool.setuptools]
+packages = ["nfo_to_vsmeta_converter_complete"]
+
+[tool.setuptools.package-data]
+nfo_to_vsmeta_converter_complete = [
+    "plugins/*.py",
+    "plugins/configs/*.json",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["nfo_to_vsmeta_converter_complete"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
