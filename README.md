@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![版本](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/example/nfo-to-vsmeta)
+[![版本](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA)
 [![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
 [![许可](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
@@ -61,7 +61,7 @@
 
 1. **克隆或下载项目**
 ```bash
-git clone https://github.com/example/nfo-to-vsmeta.git
+git clone https://github.com/1525745393/TRAE--AI-NFO-to-VSMETA.git
 cd nfo-to-vsmeta
 ```
 
