@@ -1622,8 +1622,8 @@ def api_get_plugin_config(name: str) -> Dict:
     schema = {}
     try:
         schema = plugin.config_schema
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"获取插件 {name} 的配置 schema 失败: {e}")
     return jsonify({
         'name': name,
         'config': config.get_all() if config else {},
