@@ -6,7 +6,6 @@ PyPI 配置验证和准备脚本
 """
 
 import sys
-import os
 from pathlib import Path
 
 

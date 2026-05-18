@@ -7,7 +7,6 @@
 
 import sys
 import subprocess
-import shlex
 
 
 def print_banner():

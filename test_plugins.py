@@ -18,7 +18,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from nfo_to_vsmeta_converter_complete import (
     PluginManager,
-    PluginConfig,
     Config
 )
 
@@ -47,7 +46,7 @@ def test_plugin_loading(pm, plugin_dir="plugins"):
     print(f"✅ 成功加载 {count} 个插件")
     
     plugins = pm.list_plugins()
-    print(f"\n已加载的插件列表:")
+    print("\n已加载的插件列表:")
     for i, plugin in enumerate(plugins, 1):
         print(f"  {i}. {plugin['name']} (v{plugin['version']})")
         print(f"     - 类型: {plugin['type']}")
@@ -79,7 +78,7 @@ def test_plugin_config(pm):
         
         # 设置配置
         config.set("test_key", "test_value")
-        print(f"✅ 设置配置成功: test_key = test_value")
+        print("✅ 设置配置成功: test_key = test_value")
         
         # 获取配置
         value = config.get("test_key")
@@ -161,9 +160,9 @@ def main():
     print("\n" + "="*60)
     print("测试总结")
     print("="*60)
-    print(f"✓ 插件管理器正常工作")
+    print("✓ 插件管理器正常工作")
     print(f"✓ 成功加载 {count} 个插件")
-    print(f"✓ 插件系统所有功能测试通过")
+    print("✓ 插件系统所有功能测试通过")
     print("\n🎉 插件系统测试完成！")
 
 if __name__ == "__main__":

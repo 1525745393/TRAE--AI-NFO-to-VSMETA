@@ -12,14 +12,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from nfo_to_vsmeta_converter_complete import (
     PluginManager,
-    PluginConfig,
     Plugin,
-    NFOParserPlugin,
     MetadataEnhancerPlugin,
     FileFilterPlugin,
-    LifecyclePlugin,
-    VideoMetadata,
-    Config
+    LifecyclePlugin
 )
 
 

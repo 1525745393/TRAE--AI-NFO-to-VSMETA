@@ -136,14 +136,14 @@ def check_wheel(wheel_path):
             # 检查 metadata
             metadata_files = [n for n in names if 'METADATA' in n]
             if metadata_files:
-                print(f"\n📋 元数据文件:")
+                print("\n📋 元数据文件:")
                 for mf in metadata_files:
                     print(f"   {mf}")
             
             # 检查 wheel 信息
             wheel_files = [n for n in names if n.endswith('.dist-info/WHEEL')]
             if wheel_files:
-                print(f"\n📦 Wheel 信息:")
+                print("\n📦 Wheel 信息:")
                 content = zf.read(wheel_files[0]).decode('utf-8')
                 print(content[:500])
             
@@ -176,7 +176,7 @@ def extract_and_check(tar_path):
             if readme_path.exists():
                 content = readme_path.read_text(encoding='utf-8')
                 lines = content.split('\n')
-                print(f"\n📄 README.md 预览 (前 20 行):")
+                print("\n📄 README.md 预览 (前 20 行):")
                 print("-" * 60)
                 for line in lines[:20]:
                     print(line)
@@ -207,13 +207,13 @@ def check_pip_install():
         if result.returncode == 0:
             print(f"✅ pip 可用: {result.stdout.strip()}")
         else:
-            print(f"❌ pip 不可用")
+            print("❌ pip 不可用")
             return False
         
         # 尝试 dry-run 安装
         whl_path = Path('dist/nfo_to_vsmeta-2.0.1-py3-none-any.whl')
         if whl_path.exists():
-            print(f"\n📦 测试安装 wheel 包...")
+            print("\n📦 测试安装 wheel 包...")
             result = subprocess.run(
                 [sys.executable, '-m', 'pip', 'install', '--dry-run', '--force-reinstall', str(whl_path)],
                 capture_output=True,
@@ -228,7 +228,7 @@ def check_pip_install():
                     print("   - nfo-to-vsmeta")
                     print("   - nfo-vsmeta-web")
             else:
-                print(f"⚠️ 安装测试有问题:")
+                print("⚠️ 安装测试有问题:")
                 print(result.stderr[:500])
             
             return result.returncode == 0
@@ -243,7 +243,7 @@ def print_summary(tar_info, wheel_info, install_ok):
     print("📊 检查总结")
     print("="*60)
     
-    print(f"\n📦 源码包 (tar.gz):")
+    print("\n📦 源码包 (tar.gz):")
     if tar_info:
         print(f"   文件总数: {tar_info['total']}")
         print(f"   Python 文件: {tar_info['py']}")
@@ -251,7 +251,7 @@ def print_summary(tar_info, wheel_info, install_ok):
         print(f"   配置文件: {tar_info['config']}")
         print(f"   关键文件: {'✅ 全部找到' if tar_info['key_found'] else '❌ 部分缺失'}")
     
-    print(f"\n📦 Wheel 包 (whl):")
+    print("\n📦 Wheel 包 (whl):")
     if wheel_info:
         print(f"   文件总数: {wheel_info['total']}")
         print(f"   元数据文件: {wheel_info['metadata']}")

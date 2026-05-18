@@ -16,7 +16,7 @@ import pickle
 import shutil
 import concurrent.futures
 import threading
-from typing import List, Tuple, Optional, Dict, Any, Union, Set
+from typing import List, Tuple, Optional, Dict, Union, Set
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -1173,7 +1173,7 @@ class NFOToVSMETAConverter:
             path = f'performance_{ts}.txt'
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(f"性能分析报告\n{'='*30}\n")
-                f.write(f"区间(s)\t速度(文件/秒)\n")
+                f.write("区间(s)\t速度(文件/秒)\n")
                 for i, spd in enumerate(speed_history, 1):
                     f.write(f"{i*interval:>3}\t{spd:.2f}\n")
                 avg = sum(speed_history)/len(speed_history)
@@ -1733,7 +1733,7 @@ def main():
                     try:
                         converter._process_video_file(d['dir'], d['file'])
                         success += 1
-                    except Exception as e:
+                    except Exception:
                         fail += 1
                 print(Fore.GREEN + f"重试完成，成功: {success}，失败: {fail}")
         elif idx == 10:

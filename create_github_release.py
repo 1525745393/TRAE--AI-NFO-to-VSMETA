@@ -3,9 +3,7 @@
 使用 GitHub API 创建 Release 的脚本
 """
 
-import os
 import sys
-import json
 import requests
 from pathlib import Path
 
@@ -89,7 +87,7 @@ def create_release(token, owner, repo, tag, name, body, files):
         release_id = release["id"]
         upload_url = release["upload_url"].replace("{?name,label}", "")
     elif response.status_code == 422:
-        print(f"⚠️  Release 已存在，尝试获取现有 Release...")
+        print("⚠️  Release 已存在，尝试获取现有 Release...")
         # 尝试获取现有 Release
         response = requests.get(f"{release_url}/tags/{tag}", headers=headers)
         if response.status_code == 200:
@@ -136,7 +134,7 @@ def create_release(token, owner, repo, tag, name, body, files):
                 print(f"❌ {path.name} 上传失败: {upload_response.status_code}")
                 print(upload_response.text)
 
-    print(f"\n🎉 Release 完成!")
+    print("\n🎉 Release 完成!")
     print(f"访问: {release['html_url']}")
     return True
 

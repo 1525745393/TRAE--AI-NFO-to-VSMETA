@@ -196,7 +196,7 @@ def create_git_tag():
         return False
 
     commands = [
-        f"git add .",
+        "git add .",
         f'git commit -m "Release {tag_name}"',
         f"git tag -a {tag_name} -m 'Release version {tag_name}'",
         "git push",

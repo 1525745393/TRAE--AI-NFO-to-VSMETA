@@ -58,8 +58,10 @@ _ALLOWED_PROCESS_MODES = {'thread', 'process'}
 _ALLOWED_OUTPUT_FORMATS = {'vsmeta', 'nfo'}
 _ALLOWED_REPORT_FORMATS = {'html', 'csv', 'txt'}
 
-app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+app = None
+if HAS_FLASK:
+    app = Flask(__name__)
+    app.secret_key = secrets.token_hex(32)
 
 _state_lock = threading.Lock()
 

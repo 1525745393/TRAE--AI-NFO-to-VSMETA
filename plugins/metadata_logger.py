@@ -20,7 +20,6 @@ import time
 
 # 从主程序导入插件基类
 # 注意：插件文件独立运行，需要通过 sys.path 导入主程序模块
-import sys
 import importlib.util
 
 # 动态导入主程序中的插件基类
@@ -29,8 +28,8 @@ _spec = importlib.util.spec_from_file_location("converter", os.path.abspath(_mai
 _converter = importlib.util.module_from_spec(_spec)
 # 不执行模块，只获取类型（避免递归导入）
 # 直接从 abc 定义基类
-from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from abc import ABC
+from typing import Dict
 
 
 class MetadataLoggerPlugin(ABC):
