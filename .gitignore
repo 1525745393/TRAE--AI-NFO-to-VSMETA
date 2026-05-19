@@ -132,3 +132,6 @@ logs/
 .THUMB
 # Video Station
 .vsmeta.bak
+
+# Backup files
+backup/
