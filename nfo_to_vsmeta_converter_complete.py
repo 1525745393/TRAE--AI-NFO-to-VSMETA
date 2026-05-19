@@ -2103,7 +2103,7 @@ class PluginManager:
         # 构建依赖图
         in_degree = {name: 0 for name in name_to_class}
         graph: Dict[str, List[str]] = {name: [] for name in name_to_class}
-        missing_deps: Dict[str, str] = {}
+        missing_deps: Dict[str, List[str]] = {}
 
         for name, cls in name_to_class.items():
             try:
@@ -2196,7 +2196,7 @@ class PluginManager:
         """
         result = []
         for p in self._plugins.values():
-            info = {
+            info: Dict[str, Any] = {
                 "name": p.name,
                 "version": p.version,
                 "description": p.description,
