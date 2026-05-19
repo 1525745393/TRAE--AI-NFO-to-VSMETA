@@ -121,7 +121,6 @@ dmypy.json
 *.json.bak
 conversion_checkpoint.json.bak
 *.backup/
-reports/
 output/
 logs/
 *.log
@@ -133,5 +132,7 @@ logs/
 # Video Station
 .vsmeta.bak
 
-# Backup files
-backup/
+# Backup cache (keep backup/reports in git)
+backup/cache/
+backup/temp/
+backup/.uploads/
