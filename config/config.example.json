@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "converter": {
+    "directories": ["."],
+    "max_workers": 4,
+    "max_image_size_kb": 200,
+    "image_compression_ratio": 0.8,
+    "auto_backup": true,
+    "backup_path": null,
+    "skip_existing": true,
+    "overwrite_nfo": false,
+    "generate_sample": false
+  },
+  "ui": {
+    "theme": "dark",
+    "auto_scroll": true,
+    "window_width": 1280,
+    "window_height": 800,
+    "window_maximized": false,
+    "show_advanced": false,
+    "recent_directories": [],
+    "max_recent_directories": 10
+  },
+  "plugins": {
+    "enabled_plugins": [],
+    "plugin_settings": {},
+    "plugin_order": []
+  },
+  "cache": {
+    "enabled": true,
+    "cache_dir": null,
+    "max_cache_size_mb": 512,
+    "cache_ttl_hours": 168,
+    "auto_cleanup": true
+  },
+  "logging": {
+    "level": "INFO",
+    "log_to_file": true,
+    "log_dir": null,
+    "max_log_files": 10,
+    "max_log_size_mb": 10,
+    "show_timestamp": true,
+    "show_level": true
+  }
+}
