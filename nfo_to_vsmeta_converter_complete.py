@@ -3543,7 +3543,9 @@ th{{background:#f2f2f2;}}</style></head><body>
 # ============================================================================
 
 
-def _prompt_int(prompt: str, default: int, min_val: Optional[int] = None, max_val: Optional[int] = None) -> int:
+def _prompt_int(
+    prompt: str, default: int, min_val: Optional[int] = None, max_val: Optional[int] = None
+) -> int:
     """带验证的整数输入"""
     value = input(f"{prompt}（默认 {default}）: ").strip()
     if not value:

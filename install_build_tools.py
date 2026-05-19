@@ -82,11 +82,9 @@ def main():
 
     # 安装缺失的包
     print(f"\n📦 正在安装: {', '.join(to_install)}")
-    all_success = True
 
     for pkg in to_install:
-        if not install_package(pkg):
-            all_success = False
+        install_package(pkg)
 
     # 再次检查
     print("\n" + "=" * 60)

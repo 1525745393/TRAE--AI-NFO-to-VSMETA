@@ -18,7 +18,6 @@ def clear_screen():
 
     try:
         shutil.get_terminal_size()
-        columns = shutil.get_terminal_size().columns
         print("\n" * 50)
     except Exception:
         print("\n" * 50)
