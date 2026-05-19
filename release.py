@@ -35,17 +35,12 @@ def run_command(cmd, description, check=True):
 
     try:
         import shlex
+
         if isinstance(cmd, str):
             cmd_list = shlex.split(cmd)
         else:
             cmd_list = cmd
-        result = subprocess.run(
-            cmd_list,
-            shell=False,
-            check=check,
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(cmd_list, shell=False, check=check, capture_output=True, text=True)
         if result.stdout:
             print(result.stdout)
         if result.stderr:
@@ -72,12 +67,13 @@ def clean_build_dirs():
         "**/__pycache__",
         ".coverage",
         "htmlcov",
-        ".mypy_cache"
+        ".mypy_cache",
     ]
 
     for pattern in dirs_to_remove:
         if "*" in pattern:
             import glob
+
             for path in glob.glob(pattern):
                 if os.path.isdir(path):
                     print(f"  删除目录: {path}")
@@ -92,11 +88,7 @@ def run_tests():
     """运行测试"""
     print("\n🧪 运行测试...")
 
-    if not run_command(
-        f"{sys.executable} -m pytest tests/ -v",
-        "单元测试",
-        check=False
-    ):
+    if not run_command(f"{sys.executable} -m pytest tests/ -v", "单元测试", check=False):
         print("⚠️  测试失败，但继续发布流程...")
         return False
     return True
@@ -106,22 +98,17 @@ def check_code_quality():
     """检查代码质量"""
     print("\n🔍 检查代码质量...")
 
-    checks = [
-        ("flake8", "代码检查"),
-        ("mypy", "类型检查")
-    ]
+    checks = [("flake8", "代码检查"), ("mypy", "类型检查")]
 
     all_passed = True
     import shlex
+
     for tool, name in checks:
         try:
-            cmd_list = shlex.split(f"{sys.executable} -m {tool} nfo_to_vsmeta_converter_complete.py")
-            result = subprocess.run(
-                cmd_list,
-                shell=False,
-                capture_output=True,
-                text=True
+            cmd_list = shlex.split(
+                f"{sys.executable} -m {tool} nfo_to_vsmeta_converter_complete.py"
             )
+            result = subprocess.run(cmd_list, shell=False, capture_output=True, text=True)
             if result.returncode == 0:
                 print(f"✅ {name}通过")
             else:
@@ -139,11 +126,7 @@ def build_package():
     """构建包"""
     print("\n📦 构建发布包...")
 
-    if not run_command(
-        f"{sys.executable} -m build",
-        "构建包",
-        check=False
-    ):
+    if not run_command(f"{sys.executable} -m build", "构建包", check=False):
         print("❌ 构建失败")
         return False
 
@@ -179,7 +162,7 @@ def upload_to_pypi(test=False):
     print(f"{'='*70}")
 
     confirm = input(f"确认上传到 {'Test ' if test else ''}PyPI? (y/N): ").strip().lower()
-    if confirm != 'y':
+    if confirm != "y":
         print("取消上传")
         return False
 
@@ -198,7 +181,7 @@ def create_git_tag():
         return False
 
     confirm = input(f"确认创建标签 {tag_name}? (y/N): ").strip().lower()
-    if confirm != 'y':
+    if confirm != "y":
         print("取消创建标签")
         return False
 
@@ -207,7 +190,7 @@ def create_git_tag():
         f'git commit -m "Release {tag_name}"',
         f"git tag -a {tag_name} -m 'Release version {tag_name}'",
         "git push",
-        f"git push origin {tag_name}"
+        f"git push origin {tag_name}",
     ]
 
     for cmd in commands:
@@ -220,9 +203,9 @@ def create_git_tag():
 
 def print_release_checklist():
     """打印发布检查清单"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📋 发布前检查清单")
-    print("="*70)
+    print("=" * 70)
 
     checklist = [
         "✅ 项目代码完成",
@@ -238,13 +221,13 @@ def print_release_checklist():
         "✅ 测试安装",
         "✅ 正式发布",
         "✅ 创建 Git 标签",
-        "✅ 发布公告"
+        "✅ 发布公告",
     ]
 
     for item in checklist:
         print(f"  {item}")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
 
 
 def main():
@@ -315,9 +298,9 @@ def main():
 
         show_build_artifacts()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("🎉 构建完成！")
-        print("="*70)
+        print("=" * 70)
         print("\n下一步操作:")
         print("  1. 测试安装: pip install dist/*.whl --force-reinstall")
         print("  2. 上传 Test: python release.py testpypi")

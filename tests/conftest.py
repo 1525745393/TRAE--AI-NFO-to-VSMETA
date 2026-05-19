@@ -13,11 +13,7 @@ import pytest
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from nfo_to_vsmeta_converter_complete import (
-    Config,
-    VideoMetadata,
-    PluginManager
-)
+from nfo_to_vsmeta_converter_complete import Config, VideoMetadata, PluginManager
 
 
 @pytest.fixture
@@ -31,12 +27,7 @@ def temp_dir():
 @pytest.fixture
 def sample_config():
     """创建示例配置"""
-    return Config(
-        directory=".",
-        max_workers=2,
-        max_image_size_kb=200,
-        image_compression_ratio=0.8
-    )
+    return Config(directory=".", max_workers=2, max_image_size_kb=200, image_compression_ratio=0.8)
 
 
 @pytest.fixture
@@ -52,7 +43,7 @@ def sample_metadata():
         genres=["动作", "科幻"],
         directors=["测试导演"],
         actors=["演员A", "演员B"],
-        imdb_id="tt1234567"
+        imdb_id="tt1234567",
     )
 
 
@@ -65,7 +56,7 @@ def plugin_manager():
 @pytest.fixture
 def sample_nfo_content():
     """示例 NFO 文件内容"""
-    return '''<?xml version="1.0" encoding="utf-8"?>
+    return """<?xml version="1.0" encoding="utf-8"?>
 <movie>
     <title>测试影片</title>
     <originaltitle>Test Movie</originaltitle>
@@ -84,7 +75,7 @@ def sample_nfo_content():
     </actor>
     <imdb>tt1234567</imdb>
 </movie>
-'''
+"""
 
 
 @pytest.fixture

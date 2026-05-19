@@ -31,7 +31,7 @@ class TestConfig:
             directory="/path/to/movies",
             max_workers=8,
             max_image_size_kb=500,
-            image_compression_ratio=0.9
+            image_compression_ratio=0.9,
         )
         assert config.directory == ["/path/to/movies"]
         assert config.max_workers == 8
@@ -68,11 +68,7 @@ class TestConfig:
 
     def test_save_and_load(self, temp_dir):
         """测试配置保存和加载"""
-        config = Config(
-            directory="/test/path",
-            max_workers=8,
-            max_image_size_kb=300
-        )
+        config = Config(directory="/test/path", max_workers=8, max_image_size_kb=300)
 
         config_path = os.path.join(temp_dir, "test_config.json")
         config.save_to_file(config_path)
@@ -96,9 +92,9 @@ class TestConfig:
 
         assert os.path.exists(config_path)
 
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            assert data['max_workers'] == 6
+            assert data["max_workers"] == 6
 
 
 if __name__ == "__main__":

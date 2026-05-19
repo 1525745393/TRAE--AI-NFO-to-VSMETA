@@ -15,7 +15,7 @@ from nfo_to_vsmeta_converter_complete import (
     Plugin,
     MetadataEnhancerPlugin,
     FileFilterPlugin,
-    LifecyclePlugin
+    LifecyclePlugin,
 )
 
 
@@ -29,6 +29,7 @@ class TestPluginBase:
 
     def test_plugin_properties(self):
         """测试插件基本属性"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -49,6 +50,7 @@ class TestPluginBase:
 
     def test_default_dependencies(self):
         """测试默认依赖为空"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -68,6 +70,7 @@ class TestPluginBase:
 
     def test_default_priority(self):
         """测试默认优先级"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -86,6 +89,7 @@ class TestPluginBase:
 
     def test_config_schema_default(self):
         """测试默认配置 schema 为空"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -114,6 +118,7 @@ class TestPluginManager:
 
     def test_register_plugin(self):
         """测试插件注册"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -133,10 +138,11 @@ class TestPluginManager:
 
         plugins = pm.list_plugins()
         assert len(plugins) == 1
-        assert plugins[0]['name'] == "test_register"
+        assert plugins[0]["name"] == "test_register"
 
     def test_unregister_plugin(self):
         """测试插件注销"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -160,6 +166,7 @@ class TestPluginManager:
 
     def test_get_plugin(self):
         """测试获取插件"""
+
         class TestPlugin(Plugin):
             @property
             def name(self):
@@ -183,6 +190,7 @@ class TestPluginManager:
 
     def test_priority_sorting(self):
         """测试优先级排序"""
+
         class LowPriorityPlugin(Plugin):
             @property
             def name(self):
@@ -222,8 +230,8 @@ class TestPluginManager:
         pm.register(HighPriorityPlugin())
 
         plugins = pm.list_plugins()
-        assert plugins[0]['name'] == "high_priority"
-        assert plugins[1]['name'] == "low_priority"
+        assert plugins[0]["name"] == "high_priority"
+        assert plugins[1]["name"] == "low_priority"
 
 
 class TestMetadataEnhancerPlugin:
@@ -264,10 +272,10 @@ class TestLifecyclePlugin:
                 return "测试生命周期"
 
         plugin = TestLifecyclePlugin()
-        assert hasattr(plugin, 'on_start')
-        assert hasattr(plugin, 'on_file_start')
-        assert hasattr(plugin, 'on_file_end')
-        assert hasattr(plugin, 'on_finish')
+        assert hasattr(plugin, "on_start")
+        assert hasattr(plugin, "on_file_start")
+        assert hasattr(plugin, "on_file_end")
+        assert hasattr(plugin, "on_finish")
 
 
 if __name__ == "__main__":

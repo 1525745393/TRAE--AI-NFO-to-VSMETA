@@ -13,7 +13,7 @@ from pathlib import Path
 def count_lines(file_path):
     """计算文件行数"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             return sum(1 for line in f)
     except Exception:
         return 0
@@ -29,9 +29,9 @@ def get_size(file_path):
 
 def print_project_overview():
     """打印项目概览"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 NFO to VSMETA 转换器 - 项目概览")
-    print("="*70)
+    print("=" * 70)
 
     project_root = Path(".")
 
@@ -42,7 +42,7 @@ def print_project_overview():
         "single_file_converter_optimized_fixed.py",
         "test_plugins.py",
         "setup.py",
-        "quickstart.py"
+        "quickstart.py",
     ]
 
     total_lines = 0
@@ -65,7 +65,7 @@ def print_project_overview():
         "PROJECT_SUMMARY.md",
         "CHANGELOG.md",
         "DEVELOPMENT.md",
-        "LICENSE"
+        "LICENSE",
     ]
 
     print("\n📚 文档文件:")
@@ -79,12 +79,7 @@ def print_project_overview():
             print(f"  {filename:<45} {lines:>6} 行  {size:>5} KB")
 
     # 配置文件
-    config_files = [
-        "requirements.txt",
-        "pyproject.toml",
-        ".gitignore",
-        ".vscode/settings.json"
-    ]
+    config_files = ["requirements.txt", "pyproject.toml", ".gitignore", ".vscode/settings.json"]
 
     print("\n⚙️  配置文件:")
     print("-" * 40)
@@ -160,9 +155,9 @@ def print_project_overview():
         print(f"  文档内容: {docs_lines} 行  {docs_size} KB")
 
     # 汇总
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 项目汇总")
-    print("="*70)
+    print("=" * 70)
     print(f"  总代码行数:  {total_lines:,} 行")
     print(f"  总文件大小:  {total_size:.1f} KB ({total_size/1024:.1f} MB)")
 
@@ -183,7 +178,7 @@ def print_project_overview():
         ("tests/", "测试目录"),
         ("plugins/", "插件目录"),
         ("docs/", "文档目录"),
-        (".vscode/", "编辑器配置")
+        (".vscode/", "编辑器配置"),
     ]
 
     all_good = True
@@ -196,12 +191,12 @@ def print_project_overview():
             all_good = False
         print(f"  {status} {path:<30} - {desc}")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     if all_good:
         print("🎉 项目准备就绪，可以开始使用！")
     else:
         print("⚠️  部分文件缺失，请检查项目结构")
-    print("="*70)
+    print("=" * 70)
 
     # 快速启动命令
     print("\n" + "🚀 快速启动命令:")

@@ -12,11 +12,9 @@ def get_github_token():
     """从 git remote 中提取 GitHub token"""
     try:
         import subprocess
+
         result = subprocess.run(
-            ["git", "remote", "get-url", "origin"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "remote", "get-url", "origin"], capture_output=True, text=True, check=True
         )
         url = result.stdout.strip()
         if "@github.com" in url:
@@ -36,11 +34,9 @@ def get_repo_info():
     """获取仓库信息"""
     try:
         import subprocess
+
         result = subprocess.run(
-            ["git", "remote", "get-url", "origin"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "remote", "get-url", "origin"], capture_output=True, text=True, check=True
         )
         url = result.stdout.strip()
         if url.endswith(".git"):
@@ -63,10 +59,7 @@ def get_repo_info():
 def create_release(token, owner, repo, tag, name, body, files):
     """创建 GitHub Release"""
     base_url = f"https://api.github.com/repos/{owner}/{repo}"
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
+    headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
 
     # 1. 创建 Release
     release_url = f"{base_url}/releases"
@@ -75,7 +68,7 @@ def create_release(token, owner, repo, tag, name, body, files):
         "name": name,
         "body": body,
         "draft": False,
-        "prerelease": False
+        "prerelease": False,
     }
 
     print(f"创建 Release: {tag}...")
@@ -84,7 +77,6 @@ def create_release(token, owner, repo, tag, name, body, files):
     if response.status_code == 201:
         release = response.json()
         print(f"✅ Release 创建成功: {release['html_url']}")
-        release_id = release["id"]
         upload_url = release["upload_url"].replace("{?name,label}", "")
     elif response.status_code == 422:
         print("⚠️  Release 已存在，尝试获取现有 Release...")
@@ -93,7 +85,6 @@ def create_release(token, owner, repo, tag, name, body, files):
         if response.status_code == 200:
             release = response.json()
             print(f"找到现有 Release: {release['html_url']}")
-            release_id = release["id"]
             upload_url = release["upload_url"].replace("{?name,label}", "")
         else:
             print(f"❌ 无法获取 Release: {response.status_code}")
@@ -116,17 +107,13 @@ def create_release(token, owner, repo, tag, name, body, files):
             print(f"上传: {path.name}...")
             file_headers = {
                 "Authorization": f"token {token}",
-                "Content-Type": "application/octet-stream"
+                "Content-Type": "application/octet-stream",
             }
             params = {"name": path.name}
 
             with open(path, "rb") as f:
                 upload_response = requests.post(
-                    upload_url,
-                    headers=file_headers,
-                    params=params,
-                    data=f,
-                    timeout=60
+                    upload_url, headers=file_headers, params=params, data=f, timeout=60
                 )
 
             if upload_response.status_code == 201:
@@ -191,10 +178,7 @@ pip install nfo_to_vsmeta-2.0.1-py3-none-any.whl
 ```
 """
 
-    files = [
-        "dist/nfo_to_vsmeta-2.0.1.tar.gz",
-        "dist/nfo_to_vsmeta-2.0.1-py3-none-any.whl"
-    ]
+    files = ["dist/nfo_to_vsmeta-2.0.1.tar.gz", "dist/nfo_to_vsmeta-2.0.1-py3-none-any.whl"]
 
     success = create_release(token, owner, repo, tag, name, body, files)
     return 0 if success else 1

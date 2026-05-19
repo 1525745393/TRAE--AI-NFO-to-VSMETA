@@ -15,12 +15,13 @@ from pathlib import Path
 def clear_screen():
     """清除屏幕"""
     import shutil
+
     try:
         shutil.get_terminal_size()
         columns = shutil.get_terminal_size().columns
-        print('\n' * 50)
+        print("\n" * 50)
     except Exception:
-        print('\n' * 50)
+        print("\n" * 50)
 
 
 def print_header():
@@ -108,13 +109,7 @@ def create_new_plugin():
     print("  [5] LifecyclePlugin    - 生命周期插件")
 
     type_choice = input("\n选择插件类型 (1-5): ").strip()
-    type_map = {
-        "1": "parser",
-        "2": "generator",
-        "3": "enhancer",
-        "4": "filter",
-        "5": "lifecycle"
-    }
+    type_map = {"1": "parser", "2": "generator", "3": "enhancer", "4": "filter", "5": "lifecycle"}
 
     plugin_type = type_map.get(type_choice, "enhancer")
 
@@ -124,10 +119,14 @@ def create_new_plugin():
     args = [
         sys.executable,
         "nfo_to_vsmeta_converter_complete.py",
-        "--create-plugin", plugin_name,
-        "--plugin-type", plugin_type,
-        "--plugin-author", author,
-        "--plugin-description", description
+        "--create-plugin",
+        plugin_name,
+        "--plugin-type",
+        plugin_type,
+        "--plugin-author",
+        author,
+        "--plugin-description",
+        description,
     ]
 
     print(f"\n正在创建插件: {plugin_name} (类型: {plugin_type})")
@@ -176,10 +175,10 @@ def open_documentation():
     if readme_path.exists():
         print("找到 README.md，尝试打开...")
         try:
-            if os.name == 'nt':
+            if os.name == "nt":
                 os.startfile(str(readme_path))
             else:
-                subprocess.run(['xdg-open', str(readme_path)])
+                subprocess.run(["xdg-open", str(readme_path)])
         except Exception:
             print(f"请手动打开文件: {readme_path.absolute()}")
     else:

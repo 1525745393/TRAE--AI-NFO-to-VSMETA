@@ -47,16 +47,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from flask import Flask, render_template_string, jsonify, request, send_file
+
     HAS_FLASK = True
 except ImportError:
     HAS_FLASK = False
 
-logger = logging.getLogger('web_ui')
+logger = logging.getLogger("web_ui")
 
-_ALLOWED_LOG_LEVELS = {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}
-_ALLOWED_PROCESS_MODES = {'thread', 'process'}
-_ALLOWED_OUTPUT_FORMATS = {'vsmeta', 'nfo'}
-_ALLOWED_REPORT_FORMATS = {'html', 'csv', 'txt'}
+_ALLOWED_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+_ALLOWED_PROCESS_MODES = {"thread", "process"}
+_ALLOWED_OUTPUT_FORMATS = {"vsmeta", "nfo"}
+_ALLOWED_REPORT_FORMATS = {"html", "csv", "txt"}
 
 app = None
 if HAS_FLASK:
@@ -66,19 +67,25 @@ if HAS_FLASK:
 _state_lock = threading.Lock()
 
 _state: Dict[str, Any] = {
-    'converter': None,
-    'config': None,
-    'is_running': False,
-    'progress': {
-        'total': 0, 'completed': 0, 'success': 0, 'failed': 0, 'skipped': 0,
-        'current_file': '', 'start_time': None, 'end_time': None,
+    "converter": None,
+    "config": None,
+    "is_running": False,
+    "progress": {
+        "total": 0,
+        "completed": 0,
+        "success": 0,
+        "failed": 0,
+        "skipped": 0,
+        "current_file": "",
+        "start_time": None,
+        "end_time": None,
     },
-    'scan_results': [],
-    'selected_files': [],  # 批量选择的文件
-    'logs': [],
-    'max_logs': 1000,
-    'csrf_token': secrets.token_hex(16),
-    'api_token': '',
+    "scan_results": [],
+    "selected_files": [],  # 批量选择的文件
+    "logs": [],
+    "max_logs": 1000,
+    "csrf_token": secrets.token_hex(16),
+    "api_token": "",
 }
 
 _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -87,7 +94,7 @@ _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 def _validate_path(path: str, allow_absolute: bool = False) -> bool:
     if not path or not isinstance(path, str):
         return False
-    if '..' in path:
+    if ".." in path:
         return False
     if not allow_absolute:
         real = os.path.realpath(os.path.join(_PROJECT_ROOT, path))
@@ -97,44 +104,45 @@ def _validate_path(path: str, allow_absolute: bool = False) -> bool:
 
 def _validate_config_data(data: Optional[Dict]) -> Tuple[Optional[Dict], Optional[str]]:
     if data is None:
-        return None, '请求体不能为空'
+        return None, "请求体不能为空"
     if not isinstance(data, dict):
-        return None, '请求体必须是 JSON 对象'
+        return None, "请求体必须是 JSON 对象"
 
     validated = {}
     errors = []
 
     # 目录验证
-    directory = data.get('directory')
+    directory = data.get("directory")
     if directory is not None:
         if isinstance(directory, str):
-            dirs = [d.strip() for d in directory.split(',') if d.strip()]
+            dirs = [d.strip() for d in directory.split(",") if d.strip()]
         elif isinstance(directory, list):
             dirs = [str(d).strip() for d in directory if str(d).strip()]
         else:
-            errors.append('directory 格式无效'); dirs = []
+            errors.append("directory 格式无效")
+            dirs = []
         safe_dirs = []
         for d in dirs:
             if not _validate_path(d, allow_absolute=True):
-                errors.append(f'目录路径不安全: {d}')
+                errors.append(f"目录路径不安全: {d}")
             else:
                 safe_dirs.append(d)
         if safe_dirs:
-            validated['directory'] = safe_dirs
+            validated["directory"] = safe_dirs
 
     # 整数字段
     int_fields = {
-        'max_workers': (1, 32, 4),
-        'max_image_size_kb': (10, 10240, 200),
-        'retry_attempts': (0, 20, 3),
-        'min_size': (0, 107374182400, 0),
-        'max_size': (0, 107374182400, 0),
-        'log_file_max_size': (1024, 1073741824, 10485760),
-        'log_file_backup_count': (0, 100, 5),
-        'backup_max_count': (0, 1000, 5),
-        'backup_max_age_days': (0, 3650, 30),
-        'image_cache_max_size': (10, 500, 50),
-        'checkpoint_save_interval': (1, 100, 10),
+        "max_workers": (1, 32, 4),
+        "max_image_size_kb": (10, 10240, 200),
+        "retry_attempts": (0, 20, 3),
+        "min_size": (0, 107374182400, 0),
+        "max_size": (0, 107374182400, 0),
+        "log_file_max_size": (1024, 1073741824, 10485760),
+        "log_file_backup_count": (0, 100, 5),
+        "backup_max_count": (0, 1000, 5),
+        "backup_max_age_days": (0, 3650, 30),
+        "image_cache_max_size": (10, 500, 50),
+        "checkpoint_save_interval": (1, 100, 10),
     }
     for field_name, (min_val, max_val, default) in int_fields.items():
         val = data.get(field_name)
@@ -142,16 +150,16 @@ def _validate_config_data(data: Optional[Dict]) -> Tuple[Optional[Dict], Optiona
             try:
                 ival = int(val)
                 if ival < min_val or ival > max_val:
-                    errors.append(f'{field_name} 必须在 {min_val}-{max_val} 之间')
+                    errors.append(f"{field_name} 必须在 {min_val}-{max_val} 之间")
                 else:
                     validated[field_name] = ival
             except (ValueError, TypeError):
-                errors.append(f'{field_name} 必须是整数')
+                errors.append(f"{field_name} 必须是整数")
 
     # 浮点字段
     float_fields = {
-        'image_compression_ratio': (0.1, 1.0, 0.8),
-        'retry_delay': (0.1, 60.0, 1.0),
+        "image_compression_ratio": (0.1, 1.0, 0.8),
+        "retry_delay": (0.1, 60.0, 1.0),
     }
     for field_name, (min_val, max_val, default) in float_fields.items():
         val = data.get(field_name)
@@ -159,101 +167,117 @@ def _validate_config_data(data: Optional[Dict]) -> Tuple[Optional[Dict], Optiona
             try:
                 fval = float(val)
                 if fval < min_val or fval > max_val:
-                    errors.append(f'{field_name} 必须在 {min_val}-{max_val} 之间')
+                    errors.append(f"{field_name} 必须在 {min_val}-{max_val} 之间")
                 else:
                     validated[field_name] = fval
             except (ValueError, TypeError):
-                errors.append(f'{field_name} 必须是数字')
+                errors.append(f"{field_name} 必须是数字")
 
     # 枚举字段
-    process_mode = data.get('process_mode')
+    process_mode = data.get("process_mode")
     if process_mode is not None:
         if str(process_mode) not in _ALLOWED_PROCESS_MODES:
-            errors.append(f'process_mode 必须是 {_ALLOWED_PROCESS_MODES} 之一')
+            errors.append(f"process_mode 必须是 {_ALLOWED_PROCESS_MODES} 之一")
         else:
-            validated['process_mode'] = str(process_mode)
+            validated["process_mode"] = str(process_mode)
 
-    log_level = data.get('log_level')
+    log_level = data.get("log_level")
     if log_level is not None:
         if str(log_level).upper() not in _ALLOWED_LOG_LEVELS:
-            errors.append(f'log_level 必须是 {_ALLOWED_LOG_LEVELS} 之一')
+            errors.append(f"log_level 必须是 {_ALLOWED_LOG_LEVELS} 之一")
         else:
-            validated['log_level'] = str(log_level).upper()
+            validated["log_level"] = str(log_level).upper()
 
     # 列表字段
     def parse_list(val, allowed=None):
         if isinstance(val, str):
-            items = [s.strip() for s in val.split(',') if s.strip()]
+            items = [s.strip() for s in val.split(",") if s.strip()]
         elif isinstance(val, list):
             items = [str(s).strip() for s in val if str(s).strip()]
         else:
-            return None, '格式无效'
+            return None, "格式无效"
         if allowed:
             invalid = set(items) - allowed
             if invalid:
-                return None, f'包含不支持的值: {invalid}'
+                return None, f"包含不支持的值: {invalid}"
         return items, None
 
-    for field_name in ['file_include_patterns', 'file_exclude_patterns']:
+    for field_name in ["file_include_patterns", "file_exclude_patterns"]:
         val = data.get(field_name)
         if val is not None:
             items, err = parse_list(val)
             if err:
-                errors.append(f'{field_name} {err}')
+                errors.append(f"{field_name} {err}")
             elif items:
                 validated[field_name] = items
 
-    output_formats = data.get('output_formats')
+    output_formats = data.get("output_formats")
     if output_formats is not None:
         items, err = parse_list(output_formats, _ALLOWED_OUTPUT_FORMATS)
         if err:
-            errors.append(f'output_formats {err}')
+            errors.append(f"output_formats {err}")
         elif items:
-            validated['output_formats'] = items
+            validated["output_formats"] = items
 
-    for field_name in ['nfo_extensions', 'video_extensions']:
+    for field_name in ["nfo_extensions", "video_extensions"]:
         val = data.get(field_name)
         if val is not None:
             items, err = parse_list(val)
             if err:
-                errors.append(f'{field_name} {err}')
+                errors.append(f"{field_name} {err}")
             elif items:
                 validated[field_name] = items
 
     # 布尔字段
-    for field_name in ['overwrite_existing', 'enable_backup', 'dry_run', 'delete_existing_vsmeta',
-                       'tv_show_mode', 'auto_load_plugins', 'enable_ai_completion']:
+    for field_name in [
+        "overwrite_existing",
+        "enable_backup",
+        "dry_run",
+        "delete_existing_vsmeta",
+        "tv_show_mode",
+        "auto_load_plugins",
+        "enable_ai_completion",
+    ]:
         val = data.get(field_name)
         if val is not None:
             validated[field_name] = bool(val)
 
     # 字符串字段
-    for field_name in ['file_regex', 'backup_dir', 'checkpoint_file', 'vsmeta_extension',
-                       'plugin_dir', 'report_output_dir', 'log_file', 'ai_api_key', 'ai_api_url']:
+    for field_name in [
+        "file_regex",
+        "backup_dir",
+        "checkpoint_file",
+        "vsmeta_extension",
+        "plugin_dir",
+        "report_output_dir",
+        "log_file",
+        "ai_api_key",
+        "ai_api_url",
+    ]:
         val = data.get(field_name)
         if val is not None:
             sval = str(val).strip()
-            if sval and '..' in sval:
-                errors.append(f'{field_name} 包含非法路径遍历字符')
+            if sval and ".." in sval:
+                errors.append(f"{field_name} 包含非法路径遍历字符")
             else:
                 validated[field_name] = sval
 
     if errors:
-        return validated, '; '.join(errors)
+        return validated, "; ".join(errors)
     return validated, None
 
 
 def _check_api_token() -> bool:
-    token = _state.get('api_token', '')
+    token = _state.get("api_token", "")
     if not token:
         return True
-    auth = request.headers.get('X-API-Token', '') or request.args.get('token', '')
+    auth = request.headers.get("X-API-Token", "") or request.args.get("token", "")
     return hmac.compare_digest(auth, token)
 
 
 def _check_csrf() -> bool:
-    token = request.headers.get('X-CSRF-Token', '') or request.form.get('csrf_token', '')
-    expected = _state.get('csrf_token', '')
+    token = request.headers.get("X-CSRF-Token", "") or request.form.get("csrf_token", "")
+    expected = _state.get("csrf_token", "")
     if not expected:
         return True
     return hmac.compare_digest(token, expected)
@@ -263,8 +287,9 @@ def require_api_token(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not _check_api_token():
-            return jsonify({'error': '未授权，请提供有效的 API Token'}), 401
+            return jsonify({"error": "未授权，请提供有效的 API Token"}), 401
         return f(*args, **kwargs)
+
     return decorated
 
 
@@ -272,20 +297,30 @@ def require_csrf(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not _check_csrf():
-            return jsonify({'error': 'CSRF 验证失败'}), 403
+            return jsonify({"error": "CSRF 验证失败"}), 403
         return f(*args, **kwargs)
+
     return decorated
 
 
 def _add_log(level: str, message: str) -> None:
-    safe_level = level if level in ('info', 'warning', 'error', 'success', 'debug') else 'info'
-    entry = {'time': datetime.now().strftime('%H:%M:%S'), 'level': safe_level, 'message': str(message)}
+    safe_level = level if level in ("info", "warning", "error", "success", "debug") else "info"
+    entry = {
+        "time": datetime.now().strftime("%H:%M:%S"),
+        "level": safe_level,
+        "message": str(message),
+    }
     with _state_lock:
-        _state['logs'].append(entry)
-        if len(_state['logs']) > _state['max_logs']:
-            _state['logs'] = _state['logs'][-_state['max_logs']:]
-    log_level_map = {'debug': logging.DEBUG, 'info': logging.INFO, 'success': logging.INFO,
-                     'warning': logging.WARNING, 'error': logging.ERROR}
+        _state["logs"].append(entry)
+        if len(_state["logs"]) > _state["max_logs"]:
+            _state["logs"] = _state["logs"][-_state["max_logs"] :]
+    log_level_map = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "success": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+    }
     logger.log(log_level_map.get(safe_level, logging.INFO), message)
 
 
@@ -301,39 +336,43 @@ def _set_state(key: str, value: Any) -> None:
 
 def _update_progress(updates: Dict) -> None:
     with _state_lock:
-        _state['progress'].update(updates)
+        _state["progress"].update(updates)
 
 
 # ============================================================================
 # 全局错误处理
 # ============================================================================
 
+
 @app.errorhandler(Exception)
 def handle_exception(e: Exception) -> Tuple:
-    logger.error(f'未捕获异常: {e}', exc_info=True)
-    return jsonify({'error': '服务器内部错误', 'detail': str(e) if app.debug else '请查看服务器日志'}), 500
+    logger.error(f"未捕获异常: {e}", exc_info=True)
+    return (
+        jsonify({"error": "服务器内部错误", "detail": str(e) if app.debug else "请查看服务器日志"}),
+        500,
+    )
 
 
 @app.errorhandler(400)
 def handle_bad_request(e) -> Tuple:
-    return jsonify({'error': '请求参数错误', 'detail': str(e)}), 400
+    return jsonify({"error": "请求参数错误", "detail": str(e)}), 400
 
 
 @app.errorhandler(404)
 def handle_not_found(e) -> Tuple:
-    return jsonify({'error': '资源不存在'}), 404
+    return jsonify({"error": "资源不存在"}), 404
 
 
 @app.errorhandler(405)
 def handle_method_not_allowed(e) -> Tuple:
-    return jsonify({'error': '请求方法不允许'}), 405
+    return jsonify({"error": "请求方法不允许"}), 405
 
 
 # ============================================================================
 # HTML 模板
 # ============================================================================
 
-INDEX_HTML = r'''<!DOCTYPE html>
+INDEX_HTML = r"""<!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -846,93 +885,98 @@ INDEX_HTML = r'''<!DOCTYPE html>
         (async function(){try{const s=await api('/api/status');csrfToken=s.csrf_token||''}catch(e){console.error(e)}loadConfig();refreshDashboard();refreshPlugins();startPolling()})();
     </script>
 </body>
-</html>'''
+</html>"""
 
 
 # ============================================================================
 # API 路由
 # ============================================================================
 
-@app.route('/')
+
+@app.route("/")
 def index() -> str:
     return render_template_string(INDEX_HTML)
 
 
-@app.route('/api/status')
+@app.route("/api/status")
 @require_api_token
 def api_status() -> Dict:
     with _state_lock:
-        p = _state['progress'].copy()
-        is_running = _state['is_running']
-        csrf_token = _state['csrf_token']
+        p = _state["progress"].copy()
+        is_running = _state["is_running"]
+        csrf_token = _state["csrf_token"]
     recent = []
-    converter = _state.get('converter')
-    if converter and hasattr(converter, 'report_details'):
+    converter = _state.get("converter")
+    if converter and hasattr(converter, "report_details"):
         recent = converter.report_details[-20:]
-    return jsonify({'is_running': is_running, 'progress': p, 'recent_files': recent, 'csrf_token': csrf_token})
+    return jsonify(
+        {"is_running": is_running, "progress": p, "recent_files": recent, "csrf_token": csrf_token}
+    )
 
 
-@app.route('/api/config', methods=['GET'])
+@app.route("/api/config", methods=["GET"])
 @require_api_token
 def api_get_config() -> Dict:
-    config = _get_state('config')
+    config = _get_state("config")
     if config and is_dataclass(config):
-        return jsonify({'config': asdict(config)})
-    return jsonify({'config': {}})
+        return jsonify({"config": asdict(config)})
+    return jsonify({"config": {}})
 
 
-@app.route('/api/config', methods=['POST'])
+@app.route("/api/config", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_set_config() -> Tuple:
     data = request.get_json(silent=True)
-    if data is not None and isinstance(data, dict) and (len(data) == 0 or data.get('reset')):
+    if data is not None and isinstance(data, dict) and (len(data) == 0 or data.get("reset")):
         try:
             from nfo_to_vsmeta_converter_complete import Config
+
             config = Config()
-            _set_state('config', config)
-            converter = _get_state('converter')
+            _set_state("config", config)
+            converter = _get_state("converter")
             if converter:
                 converter.config = config
-            _add_log('info', '配置已重置为默认值')
-            return jsonify({'success': True})
+            _add_log("info", "配置已重置为默认值")
+            return jsonify({"success": True})
         except Exception as e:
-            return jsonify({'error': f'重置失败: {e}'}), 500
+            return jsonify({"error": f"重置失败: {e}"}), 500
 
     validated, error = _validate_config_data(data)
     if error and not validated:
-        return jsonify({'error': error}), 400
+        return jsonify({"error": error}), 400
     try:
         from nfo_to_vsmeta_converter_complete import Config
-        existing = _get_state('config')
+
+        existing = _get_state("config")
         if existing and is_dataclass(existing):
             d = asdict(existing)
             d.update(validated)
             config = Config(**d)
         else:
             config = Config(**validated)
-        _set_state('config', config)
-        converter = _get_state('converter')
+        _set_state("config", config)
+        converter = _get_state("converter")
         if converter:
             converter.config = config
-        _add_log('info', '配置已更新')
-        return jsonify({'success': True})
+        _add_log("info", "配置已更新")
+        return jsonify({"success": True})
     except TypeError as e:
-        return jsonify({'error': f'配置参数错误: {e}'}), 400
+        return jsonify({"error": f"配置参数错误: {e}"}), 400
     except Exception as e:
-        _add_log('error', f'更新配置失败: {e}')
-        return jsonify({'error': f'内部错误: {e}'}), 500
+        _add_log("error", f"更新配置失败: {e}")
+        return jsonify({"error": f"内部错误: {e}"}), 500
 
 
-@app.route('/api/smart/parse', methods=['POST'])
+@app.route("/api/smart/parse", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_smart_parse() -> Tuple:
     """智能助手：解析自然语言命令"""
     data = request.get_json(silent=True) or {}
-    command = str(data.get('command', '')).strip().lower()
+    command = str(data.get("command", "")).strip().lower()
     if not command:
-        return jsonify({'error': '命令不能为空'}), 400
+        return jsonify({"error": "命令不能为空"}), 400
 
     try:
         config_updates = {}
@@ -940,549 +984,623 @@ def api_smart_parse() -> Tuple:
 
         # 解析年份过滤
         import re
-        year_match = re.search(r'(\d{4})\s*年?\s*(?:以后|之后|>)', command)
+
+        year_match = re.search(r"(\d{4})\s*年?\s*(?:以后|之后|>)", command)
         if year_match:
             year = year_match.group(1)
-            config_updates['file_regex'] = f'.*{year}.*'
-            message_parts.append(f'年份过滤: {year}年以后')
+            config_updates["file_regex"] = f".*{year}.*"
+            message_parts.append(f"年份过滤: {year}年以后")
 
         # 解析文件扩展名
-        ext_match = re.findall(r'(mp4|mkv|avi|ts|wmv)', command, re.I)
+        ext_match = re.findall(r"(mp4|mkv|avi|ts|wmv)", command, re.I)
         if ext_match:
-            exts = [f'.{e.lower()}' for e in set(ext_match)]
-            config_updates['video_extensions'] = exts
+            exts = [f".{e.lower()}" for e in set(ext_match)]
+            config_updates["video_extensions"] = exts
             message_parts.append(f'视频格式: {", ".join(exts)}')
 
         # 解析线程数
-        thread_match = re.search(r'(\d+)\s*个?\s*(?:线程|workers?)', command)
+        thread_match = re.search(r"(\d+)\s*个?\s*(?:线程|workers?)", command)
         if thread_match:
             workers = int(thread_match.group(1))
-            config_updates['max_workers'] = max(1, min(32, workers))
-            message_parts.append(f'线程数: {workers}')
+            config_updates["max_workers"] = max(1, min(32, workers))
+            message_parts.append(f"线程数: {workers}")
 
         # 解析图片压缩
-        compress_match = re.search(r'(\d+)%?\s*(?:质量|压缩|quality)', command)
+        compress_match = re.search(r"(\d+)%?\s*(?:质量|压缩|quality)", command)
         if compress_match:
             quality = int(compress_match.group(1))
-            config_updates['image_compression_ratio'] = max(0.1, min(1.0, quality / 100))
-            message_parts.append(f'图片质量: {quality}%')
+            config_updates["image_compression_ratio"] = max(0.1, min(1.0, quality / 100))
+            message_parts.append(f"图片质量: {quality}%")
 
         # 解析文件大小
-        size_match = re.search(r'(大于|超过)\s*(\d+)\s*(GB?|MB?|字节)', command)
+        size_match = re.search(r"(大于|超过)\s*(\d+)\s*(GB?|MB?|字节)", command)
         if size_match:
             size = int(size_match.group(2))
             unit = size_match.group(3).upper()
-            if 'G' in unit:
+            if "G" in unit:
                 size_bytes = size * 1073741824
-            elif 'M' in unit:
+            elif "M" in unit:
                 size_bytes = size * 1048576
             else:
                 size_bytes = size
-            config_updates['min_size'] = size_bytes
-            message_parts.append(f'最小文件大小: {size}{unit}')
+            config_updates["min_size"] = size_bytes
+            message_parts.append(f"最小文件大小: {size}{unit}")
 
         # 解析开关选项
-        if '备份' in command or 'backup' in command:
-            if '不' in command or '禁用' in command or '关闭' in command:
-                config_updates['enable_backup'] = False
-                message_parts.append('禁用备份')
+        if "备份" in command or "backup" in command:
+            if "不" in command or "禁用" in command or "关闭" in command:
+                config_updates["enable_backup"] = False
+                message_parts.append("禁用备份")
             else:
-                config_updates['enable_backup'] = True
-                message_parts.append('启用备份')
+                config_updates["enable_backup"] = True
+                message_parts.append("启用备份")
 
-        if '剧集' in command or 'tv show' in command or '电视剧' in command:
-            config_updates['tv_show_mode'] = True
-            message_parts.append('启用剧集模式')
+        if "剧集" in command or "tv show" in command or "电视剧" in command:
+            config_updates["tv_show_mode"] = True
+            message_parts.append("启用剧集模式")
 
-        if '预演' in command or 'dry run' in command or '测试' in command:
-            config_updates['dry_run'] = True
-            message_parts.append('启用预演模式')
+        if "预演" in command or "dry run" in command or "测试" in command:
+            config_updates["dry_run"] = True
+            message_parts.append("启用预演模式")
 
-        if '覆盖' in command or 'overwrite' in command:
-            if '不' in command:
-                config_updates['overwrite_existing'] = False
+        if "覆盖" in command or "overwrite" in command:
+            if "不" in command:
+                config_updates["overwrite_existing"] = False
             else:
-                config_updates['overwrite_existing'] = True
-                message_parts.append('允许覆盖已有文件')
+                config_updates["overwrite_existing"] = True
+                message_parts.append("允许覆盖已有文件")
 
         if not message_parts:
-            return jsonify({'error': '无法解析命令，请尝试使用示例中的格式'}), 400
+            return jsonify({"error": "无法解析命令，请尝试使用示例中的格式"}), 400
 
-        return jsonify({
-            'success': True,
-            'config': config_updates,
-            'message': '已应用: ' + '、'.join(message_parts)
-        })
+        return jsonify(
+            {
+                "success": True,
+                "config": config_updates,
+                "message": "已应用: " + "、".join(message_parts),
+            }
+        )
     except Exception as e:
-        return jsonify({'error': f'解析失败: {e}'}), 500
+        return jsonify({"error": f"解析失败: {e}"}), 500
 
 
-@app.route('/api/convert/start', methods=['POST'])
+@app.route("/api/convert/start", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_start_conversion() -> Tuple:
-    if _get_state('is_running'):
-        return jsonify({'error': '转换正在进行中'}), 400
+    if _get_state("is_running"):
+        return jsonify({"error": "转换正在进行中"}), 400
     data = request.get_json(silent=True)
     validated, error = _validate_config_data(data)
     if error and not validated:
-        return jsonify({'error': error}), 400
+        return jsonify({"error": error}), 400
 
     # 处理批量选择
-    selected_files = data.get('selected_files', []) if data else []
+    selected_files = data.get("selected_files", []) if data else []
 
     try:
         from nfo_to_vsmeta_converter_complete import Config, NFOToVSMETAConverter
-        existing = _get_state('config')
+
+        existing = _get_state("config")
         if existing and is_dataclass(existing):
             d = asdict(existing)
             d.update(validated)
             config = Config(**d)
         else:
             config = Config(**validated)
-        _set_state('config', config)
-        _set_state('is_running', True)
-        _update_progress({'total': 0, 'completed': 0, 'success': 0, 'failed': 0, 'skipped': 0,
-                          'current_file': '', 'start_time': datetime.now().isoformat(), 'end_time': None})
+        _set_state("config", config)
+        _set_state("is_running", True)
+        _update_progress(
+            {
+                "total": 0,
+                "completed": 0,
+                "success": 0,
+                "failed": 0,
+                "skipped": 0,
+                "current_file": "",
+                "start_time": datetime.now().isoformat(),
+                "end_time": None,
+            }
+        )
 
         def run_conversion() -> None:
             try:
                 converter = NFOToVSMETAConverter(config)
-                _set_state('converter', converter)
+                _set_state("converter", converter)
                 files = converter.file_scanner.scan()
 
                 # 如果有批量选择，只处理选中的文件
                 if selected_files:
-                    files = [(d, f) for d, f in files if f'{d}/{f}' in selected_files]
+                    files = [(d, f) for d, f in files if f"{d}/{f}" in selected_files]
 
                 total = len(files)
-                _update_progress({'total': total})
+                _update_progress({"total": total})
 
                 scan_data = []
                 for d, f in files:
                     fp = os.path.join(d, f)
-                    nfo_found = any(os.path.exists(fp + ext) for ext in (config.nfo_extensions or ['.nfo']))
+                    nfo_found = any(
+                        os.path.exists(fp + ext) for ext in (config.nfo_extensions or [".nfo"])
+                    )
                     size = 0
-                    try: size = os.path.getsize(fp)
-                    except OSError: pass
-                    scan_data.append({'filename': f, 'directory': d, 'size': size, 'has_nfo': nfo_found, 'selected': f'{d}/{f}' in selected_files})
-                _set_state('scan_results', scan_data)
+                    try:
+                        size = os.path.getsize(fp)
+                    except OSError:
+                        pass
+                    scan_data.append(
+                        {
+                            "filename": f,
+                            "directory": d,
+                            "size": size,
+                            "has_nfo": nfo_found,
+                            "selected": f"{d}/{f}" in selected_files,
+                        }
+                    )
+                _set_state("scan_results", scan_data)
 
                 if not files:
-                    _add_log('warning', '未找到需要处理的视频文件'); return
+                    _add_log("warning", "未找到需要处理的视频文件")
+                    return
 
-                pending = [(d, f) for d, f in files if not converter.checkpoint.is_completed(os.path.join(d, f))]
+                pending = [
+                    (d, f)
+                    for d, f in files
+                    if not converter.checkpoint.is_completed(os.path.join(d, f))
+                ]
                 if len(pending) < total:
-                    _add_log('info', f'跳过 {total - len(pending)} 个已处理文件')
+                    _add_log("info", f"跳过 {total - len(pending)} 个已处理文件")
                 if not pending:
-                    _add_log('success', '所有文件已处理完成！'); return
+                    _add_log("success", "所有文件已处理完成！")
+                    return
 
-                converter.plugin_manager.notify_lifecycle('on_start', config=config)
+                converter.plugin_manager.notify_lifecycle("on_start", config=config)
 
                 for directory, filename in pending:
-                    if not _get_state('is_running'):
-                        _add_log('warning', '转换已被用户停止'); break
+                    if not _get_state("is_running"):
+                        _add_log("warning", "转换已被用户停止")
+                        break
                     filepath = os.path.join(directory, filename)
-                    _update_progress({'current_file': filename})
-                    converter.plugin_manager.notify_lifecycle('on_file_start', filepath=filepath)
+                    _update_progress({"current_file": filename})
+                    converter.plugin_manager.notify_lifecycle("on_file_start", filepath=filepath)
                     try:
                         result = converter._process_with_retry(directory, filename)
                         converter._update_stats(result, directory, filename)
-                        r = result.get('result', 'error' if not result.get('success') else 'success')
+                        r = result.get(
+                            "result", "error" if not result.get("success") else "success"
+                        )
                         with _state_lock:
-                            if r == 'success': _state['progress']['success'] += 1
-                            elif r == 'skipped': _state['progress']['skipped'] += 1
-                            else: _state['progress']['failed'] += 1
-                        _add_log('info', f'[{r}] {filename}')
+                            if r == "success":
+                                _state["progress"]["success"] += 1
+                            elif r == "skipped":
+                                _state["progress"]["skipped"] += 1
+                            else:
+                                _state["progress"]["failed"] += 1
+                        _add_log("info", f"[{r}] {filename}")
                     except Exception as e:
-                        with _state_lock: _state['progress']['failed'] += 1
-                        converter._update_stats({'success': False, 'error': str(e)}, directory, filename)
-                        _add_log('error', f'[error] {filename}: {e}')
-                    with _state_lock: _state['progress']['completed'] += 1
+                        with _state_lock:
+                            _state["progress"]["failed"] += 1
+                        converter._update_stats(
+                            {"success": False, "error": str(e)}, directory, filename
+                        )
+                        _add_log("error", f"[error] {filename}: {e}")
+                    with _state_lock:
+                        _state["progress"]["completed"] += 1
 
                 if converter._interrupted:
                     converter.checkpoint.force_save()
-                    _add_log('warning', '进度已保存（中断）')
+                    _add_log("warning", "进度已保存（中断）")
                 converter.stats.end_time = datetime.now()
-                converter.plugin_manager.notify_lifecycle('on_finish', stats=converter.stats)
+                converter.plugin_manager.notify_lifecycle("on_finish", stats=converter.stats)
                 converter.checkpoint.shutdown()
-                p = _get_state('progress')
-                _add_log('success', f"转换完成！成功: {p['success']}, 失败: {p['failed']}, 跳过: {p['skipped']}")
+                p = _get_state("progress")
+                _add_log(
+                    "success",
+                    f"转换完成！成功: {p['success']}, 失败: {p['failed']}, 跳过: {p['skipped']}",
+                )
             except Exception as e:
-                _add_log('error', f'转换出错: {e}')
-                logger.error(f'转换线程异常: {e}', exc_info=True)
+                _add_log("error", f"转换出错: {e}")
+                logger.error(f"转换线程异常: {e}", exc_info=True)
             finally:
-                _set_state('is_running', False)
-                _update_progress({'current_file': '', 'end_time': datetime.now().isoformat()})
+                _set_state("is_running", False)
+                _update_progress({"current_file": "", "end_time": datetime.now().isoformat()})
 
         threading.Thread(target=run_conversion, daemon=True).start()
-        return jsonify({'success': True, 'message': '转换已启动'})
+        return jsonify({"success": True, "message": "转换已启动"})
     except ImportError as e:
-        return jsonify({'error': f'模块导入失败: {e}'}), 500
+        return jsonify({"error": f"模块导入失败: {e}"}), 500
     except Exception as e:
-        _set_state('is_running', False)
-        return jsonify({'error': f'启动失败: {e}'}), 500
+        _set_state("is_running", False)
+        return jsonify({"error": f"启动失败: {e}"}), 500
 
 
-@app.route('/api/convert/stop', methods=['POST'])
+@app.route("/api/convert/stop", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_stop_conversion() -> Dict:
-    _set_state('is_running', False)
-    converter = _get_state('converter')
-    if converter and hasattr(converter, '_interrupted'):
+    _set_state("is_running", False)
+    converter = _get_state("converter")
+    if converter and hasattr(converter, "_interrupted"):
         converter._interrupted = True
-    _add_log('warning', '已发送停止信号')
-    return jsonify({'success': True})
+    _add_log("warning", "已发送停止信号")
+    return jsonify({"success": True})
 
 
-@app.route('/api/scan-results')
+@app.route("/api/scan-results")
 @require_api_token
 def api_get_scan_results() -> Dict:
-    results = _get_state('scan_results', [])
-    return jsonify({'files': results})
+    results = _get_state("scan_results", [])
+    return jsonify({"files": results})
 
 
-@app.route('/api/scan-results/select', methods=['POST'])
+@app.route("/api/scan-results/select", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_select_scan_results() -> Dict:
     """更新选中的文件列表"""
     data = request.get_json(silent=True) or {}
-    files = data.get('files', [])
-    _set_state('selected_files', files)
-    return jsonify({'success': True, 'selected': len(files)})
+    files = data.get("files", [])
+    _set_state("selected_files", files)
+    return jsonify({"success": True, "selected": len(files)})
 
 
-@app.route('/api/logs')
+@app.route("/api/logs")
 @require_api_token
 def api_get_logs() -> Dict:
     with _state_lock:
-        logs = list(_state['logs'])
-    return jsonify({'logs': logs})
+        logs = list(_state["logs"])
+    return jsonify({"logs": logs})
 
 
-@app.route('/api/logs', methods=['DELETE'])
+@app.route("/api/logs", methods=["DELETE"])
 @require_api_token
 @require_csrf
 def api_clear_logs() -> Dict:
     with _state_lock:
-        _state['logs'] = []
-    return jsonify({'success': True})
+        _state["logs"] = []
+    return jsonify({"success": True})
 
 
 # ============================================================================
 # 工具箱 API
 # ============================================================================
 
-@app.route('/api/tools/validate-nfo', methods=['POST'])
+
+@app.route("/api/tools/validate-nfo", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_validate_nfo() -> Tuple:
     """验证 NFO 文件"""
     data = request.get_json(silent=True) or {}
-    path = str(data.get('path', ''))
+    path = str(data.get("path", ""))
     if not path or not os.path.isfile(path):
-        return jsonify({'error': '文件不存在'}), 404
+        return jsonify({"error": "文件不存在"}), 404
     if not _validate_path(path, allow_absolute=True):
-        return jsonify({'error': '路径不安全'}), 403
+        return jsonify({"error": "路径不安全"}), 403
     try:
         try:
             from defusedxml import ElementTree as DefusedET
+
             tree = DefusedET.parse(path)
             root = tree.getroot()
         except ImportError:
             logger.warning("defusedxml 未安装，使用标准库 XML 解析")
             import xml.etree.ElementTree as ET
+
             tree = ET.parse(path)
             root = tree.getroot()
-        result = {'valid': True}
+        result = {"valid": True}
         # 提取常用字段
-        for field in ['title', 'year', 'rating', 'plot', 'runtime']:
-            elem = root.find(f'./{field}')
+        for field in ["title", "year", "rating", "plot", "runtime"]:
+            elem = root.find(f"./{field}")
             if elem is not None and elem.text:
                 result[field] = elem.text.strip()
         return jsonify(result)
     except ET.ParseError as e:
-        return jsonify({'valid': False, 'error': f'XML 解析错误: {e}'}), 400
+        return jsonify({"valid": False, "error": f"XML 解析错误: {e}"}), 400
     except Exception as e:
-        return jsonify({'valid': False, 'error': str(e)}), 500
+        return jsonify({"valid": False, "error": str(e)}), 500
 
 
-@app.route('/api/tools/preview-vsmeta', methods=['POST'])
+@app.route("/api/tools/preview-vsmeta", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_preview_vsmeta() -> Tuple:
     """预览 VSMETA 文件内容"""
     data = request.get_json(silent=True) or {}
-    path = str(data.get('path', ''))
+    path = str(data.get("path", ""))
     if not path or not os.path.isfile(path):
-        return jsonify({'error': '文件不存在'}), 404
+        return jsonify({"error": "文件不存在"}), 404
     if not _validate_path(path, allow_absolute=True):
-        return jsonify({'error': '路径不安全'}), 403
+        return jsonify({"error": "路径不安全"}), 403
     try:
         # 读取并解析 VSMETA 文件
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             content = f.read()
         # 简单解析：提取可读的字符串
         import re
-        strings = re.findall(rb'[\x20-\x7e]{4,}', content)
-        decoded = [s.decode('utf-8', errors='ignore') for s in strings]
-        return jsonify({
-            'success': True,
-            'metadata': {
-                'file_size': len(content),
-                'readable_strings': decoded[:50],
-                'hex_preview': content[:100].hex()
+
+        strings = re.findall(rb"[\x20-\x7e]{4,}", content)
+        decoded = [s.decode("utf-8", errors="ignore") for s in strings]
+        return jsonify(
+            {
+                "success": True,
+                "metadata": {
+                    "file_size": len(content),
+                    "readable_strings": decoded[:50],
+                    "hex_preview": content[:100].hex(),
+                },
             }
-        })
+        )
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # ============================================================================
 # 报告 API
 # ============================================================================
 
-@app.route('/api/report/generate', methods=['POST'])
+
+@app.route("/api/report/generate", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_generate_report() -> Tuple:
     data = request.get_json(silent=True) or {}
-    fmt = str(data.get('format', 'html')).lower()
+    fmt = str(data.get("format", "html")).lower()
     if fmt not in _ALLOWED_REPORT_FORMATS:
-        return jsonify({'error': f'不支持的报告格式: {fmt}'}), 400
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'report_details') or not converter.report_details:
-        return jsonify({'error': '暂无转换数据，请先执行转换'}), 400
+        return jsonify({"error": f"不支持的报告格式: {fmt}"}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "report_details") or not converter.report_details:
+        return jsonify({"error": "暂无转换数据，请先执行转换"}), 400
     try:
         from nfo_to_vsmeta_converter_complete import ReportGenerator
+
         rg = ReportGenerator(converter)
         report_dir = converter.config.report_output_dir or _PROJECT_ROOT
         os.makedirs(report_dir, exist_ok=True)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'conversion_report_{timestamp}.{fmt}'
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"conversion_report_{timestamp}.{fmt}"
         filepath = os.path.join(report_dir, filename)
-        if fmt == 'html':
+        if fmt == "html":
             content = rg.generate_html(converter.report_details, converter.stats)
-        elif fmt == 'csv':
+        elif fmt == "csv":
             content = rg.generate_csv(converter.report_details)
         else:
             content = rg.generate_txt(converter.report_details, converter.stats)
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
-        _add_log('success', f'报告已生成: {filepath}')
-        return jsonify({'success': True, 'filepath': filepath, 'filename': filename})
+        _add_log("success", f"报告已生成: {filepath}")
+        return jsonify({"success": True, "filepath": filepath, "filename": filename})
     except Exception as e:
-        _add_log('error', f'生成报告失败: {e}')
-        return jsonify({'error': f'生成报告失败: {e}'}), 500
+        _add_log("error", f"生成报告失败: {e}")
+        return jsonify({"error": f"生成报告失败: {e}"}), 500
 
 
-@app.route('/api/report/download')
+@app.route("/api/report/download")
 @require_api_token
 def api_download_report():
-    fmt = request.args.get('format', 'html').lower()
+    fmt = request.args.get("format", "html").lower()
     if fmt not in _ALLOWED_REPORT_FORMATS:
-        return jsonify({'error': '不支持的格式'}), 400
-    converter = _get_state('converter')
+        return jsonify({"error": "不支持的格式"}), 400
+    converter = _get_state("converter")
     report_dir = _PROJECT_ROOT
-    if converter and hasattr(converter, 'config') and converter.config.report_output_dir:
+    if converter and hasattr(converter, "config") and converter.config.report_output_dir:
         report_dir = converter.config.report_output_dir
-    pattern = os.path.join(report_dir, f'conversion_report_*.{fmt}')
+    pattern = os.path.join(report_dir, f"conversion_report_*.{fmt}")
     files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
     if not files:
-        return jsonify({'error': '未找到报告文件'}), 404
+        return jsonify({"error": "未找到报告文件"}), 404
     return send_file(files[0], as_attachment=True, download_name=os.path.basename(files[0]))
 
 
-@app.route('/api/report/smart-analysis', methods=['POST'])
+@app.route("/api/report/smart-analysis", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_smart_analysis_report() -> Tuple:
     data = request.get_json(silent=True) or {}
-    fmt = str(data.get('format', 'txt')).lower()
+    fmt = str(data.get("format", "txt")).lower()
     if fmt not in _ALLOWED_REPORT_FORMATS:
-        return jsonify({'error': f'不支持的格式: {fmt}'}), 400
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'report_details') or not converter.report_details:
-        return jsonify({'error': '暂无转换数据'}), 400
+        return jsonify({"error": f"不支持的格式: {fmt}"}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "report_details") or not converter.report_details:
+        return jsonify({"error": "暂无转换数据"}), 400
     try:
         converter.export_smart_analysis_report(fmt)
         report_dir = converter.config.report_output_dir or _PROJECT_ROOT
-        pattern = os.path.join(report_dir, f'smart_analysis_report_*.{fmt}')
+        pattern = os.path.join(report_dir, f"smart_analysis_report_*.{fmt}")
         files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
-        filepath = files[0] if files else ''
-        _add_log('success', f'智能分析报告已生成: {filepath}')
-        return jsonify({'success': True, 'filepath': filepath})
+        filepath = files[0] if files else ""
+        _add_log("success", f"智能分析报告已生成: {filepath}")
+        return jsonify({"success": True, "filepath": filepath})
     except Exception as e:
-        _add_log('error', f'生成智能分析报告失败: {e}')
-        return jsonify({'error': str(e)}), 500
+        _add_log("error", f"生成智能分析报告失败: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/report/performance', methods=['POST'])
+@app.route("/api/report/performance", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_performance_report() -> Tuple:
     data = request.get_json(silent=True) or {}
-    fmt = str(data.get('format', 'txt')).lower()
+    fmt = str(data.get("format", "txt")).lower()
     if fmt not in _ALLOWED_REPORT_FORMATS:
-        return jsonify({'error': f'不支持的格式: {fmt}'}), 400
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'report_details') or not converter.report_details:
-        return jsonify({'error': '暂无转换数据'}), 400
+        return jsonify({"error": f"不支持的格式: {fmt}"}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "report_details") or not converter.report_details:
+        return jsonify({"error": "暂无转换数据"}), 400
     try:
         converter.export_performance_report(fmt)
         report_dir = converter.config.report_output_dir or _PROJECT_ROOT
-        pattern = os.path.join(report_dir, f'performance_report_*.{fmt}')
+        pattern = os.path.join(report_dir, f"performance_report_*.{fmt}")
         files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
-        filepath = files[0] if files else ''
-        _add_log('success', f'性能报告已生成: {filepath}')
-        return jsonify({'success': True, 'filepath': filepath})
+        filepath = files[0] if files else ""
+        _add_log("success", f"性能报告已生成: {filepath}")
+        return jsonify({"success": True, "filepath": filepath})
     except Exception as e:
-        _add_log('error', f'生成性能报告失败: {e}')
-        return jsonify({'error': str(e)}), 500
+        _add_log("error", f"生成性能报告失败: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================================================================
 # 断点 API
 # ============================================================================
 
-@app.route('/api/checkpoint')
+
+@app.route("/api/checkpoint")
 @require_api_token
 def api_get_checkpoint() -> Dict:
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'checkpoint'):
-        return jsonify({'error': '转换器未初始化，请先启动一次转换'})
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "checkpoint"):
+        return jsonify({"error": "转换器未初始化，请先启动一次转换"})
     try:
         cp = converter.checkpoint
         info = {
-            'filepath': getattr(cp, 'checkpoint_file', '未知'),
-            'completed_count': len(getattr(cp, 'completed', set())),
-            'failed_count': len(getattr(cp, 'failed', {})),
-            'last_updated': datetime.fromtimestamp(os.path.getmtime(cp.checkpoint_file)).strftime('%Y-%m-%d %H:%M:%S')
-                if hasattr(cp, 'checkpoint_file') and os.path.exists(cp.checkpoint_file) else '-',
-            'completed_files': [],
+            "filepath": getattr(cp, "checkpoint_file", "未知"),
+            "completed_count": len(getattr(cp, "completed", set())),
+            "failed_count": len(getattr(cp, "failed", {})),
+            "last_updated": (
+                datetime.fromtimestamp(os.path.getmtime(cp.checkpoint_file)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                if hasattr(cp, "checkpoint_file") and os.path.exists(cp.checkpoint_file)
+                else "-"
+            ),
+            "completed_files": [],
         }
-        for fp in sorted(getattr(cp, 'completed', set()))[:100]:
-            info['completed_files'].append({'filepath': fp, 'status': 'completed'})
-        for fp in sorted(getattr(cp, 'failed', {}).keys())[:50]:
-            info['completed_files'].append({'filepath': fp, 'status': 'failed'})
-        return jsonify({'checkpoint': info})
+        for fp in sorted(getattr(cp, "completed", set()))[:100]:
+            info["completed_files"].append({"filepath": fp, "status": "completed"})
+        for fp in sorted(getattr(cp, "failed", {}).keys())[:50]:
+            info["completed_files"].append({"filepath": fp, "status": "failed"})
+        return jsonify({"checkpoint": info})
     except Exception as e:
-        return jsonify({'error': f'获取断点失败: {e}'}), 500
+        return jsonify({"error": f"获取断点失败: {e}"}), 500
 
 
-@app.route('/api/checkpoint', methods=['DELETE'])
+@app.route("/api/checkpoint", methods=["DELETE"])
 @require_api_token
 @require_csrf
 def api_reset_checkpoint() -> Dict:
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'checkpoint'):
-        return jsonify({'error': '转换器未初始化'}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "checkpoint"):
+        return jsonify({"error": "转换器未初始化"}), 400
     try:
         cp = converter.checkpoint
-        if hasattr(cp, 'clear'):
+        if hasattr(cp, "clear"):
             cp.clear()
         else:
-            if hasattr(cp, 'completed'): cp.completed.clear()
-            if hasattr(cp, 'failed'): cp.failed.clear()
-        _add_log('warning', '断点已重置')
-        return jsonify({'success': True})
+            if hasattr(cp, "completed"):
+                cp.completed.clear()
+            if hasattr(cp, "failed"):
+                cp.failed.clear()
+        _add_log("warning", "断点已重置")
+        return jsonify({"success": True})
     except Exception as e:
-        return jsonify({'error': f'重置失败: {e}'}), 500
+        return jsonify({"error": f"重置失败: {e}"}), 500
 
 
-@app.route('/api/retry-failed', methods=['POST'])
+@app.route("/api/retry-failed", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_retry_failed() -> Tuple:
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'checkpoint'):
-        return jsonify({'error': '转换器未初始化'}), 400
-    if _get_state('is_running'):
-        return jsonify({'error': '转换正在进行中'}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "checkpoint"):
+        return jsonify({"error": "转换器未初始化"}), 400
+    if _get_state("is_running"):
+        return jsonify({"error": "转换正在进行中"}), 400
     data = request.get_json(silent=True) or {}
-    retry_type = str(data.get('type', 'all'))
+    retry_type = str(data.get("type", "all"))
     cp = converter.checkpoint
-    failed_files = dict(getattr(cp, 'failed', {}))
+    failed_files = dict(getattr(cp, "failed", {}))
     if not failed_files:
-        return jsonify({'error': '没有失败的文件需要重试'}), 400
+        return jsonify({"error": "没有失败的文件需要重试"}), 400
     to_retry = []
     for filepath, error_msg in failed_files.items():
-        if retry_type == 'all':
+        if retry_type == "all":
             to_retry.append(filepath)
-        elif retry_type == 'nfo_missing' and 'nfo' in error_msg.lower():
+        elif retry_type == "nfo_missing" and "nfo" in error_msg.lower():
             to_retry.append(filepath)
-        elif retry_type == 'error' and 'nfo' not in error_msg.lower() and 'delete' not in error_msg.lower():
+        elif (
+            retry_type == "error"
+            and "nfo" not in error_msg.lower()
+            and "delete" not in error_msg.lower()
+        ):
             to_retry.append(filepath)
-        elif retry_type == 'delete_failed' and 'delete' in error_msg.lower():
+        elif retry_type == "delete_failed" and "delete" in error_msg.lower():
             to_retry.append(filepath)
     if not to_retry:
-        return jsonify({'error': f'没有匹配 "{retry_type}" 类型的失败文件'}), 400
+        return jsonify({"error": f'没有匹配 "{retry_type}" 类型的失败文件'}), 400
     for fp in to_retry:
         cp.failed.pop(fp, None)
         cp.completed.discard(fp)
-    if hasattr(cp, 'save'):
+    if hasattr(cp, "save"):
         cp.save()
-    _add_log('info', f'已标记 {len(to_retry)} 个文件待重试（类型: {retry_type}）')
-    return jsonify({'success': True, 'count': len(to_retry), 'type': retry_type})
+    _add_log("info", f"已标记 {len(to_retry)} 个文件待重试（类型: {retry_type}）")
+    return jsonify({"success": True, "count": len(to_retry), "type": retry_type})
 
 
 # ============================================================================
 # 备份 API
 # ============================================================================
 
-@app.route('/api/backups')
+
+@app.route("/api/backups")
 @require_api_token
 def api_get_backups() -> Dict:
-    converter = _get_state('converter')
+    converter = _get_state("converter")
     if not converter:
-        return jsonify({'files': []})
-    backup_dir = getattr(converter.config, 'backup_dir', '.backup')
+        return jsonify({"files": []})
+    backup_dir = getattr(converter.config, "backup_dir", ".backup")
     files = []
     if os.path.isdir(backup_dir):
         for f in os.listdir(backup_dir):
             fp = os.path.join(backup_dir, f)
             if os.path.isfile(fp):
                 stat = os.stat(fp)
-                files.append({'name': f, 'path': fp, 'size': stat.st_size,
-                              'modified': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')})
-    files.sort(key=lambda x: x['modified'], reverse=True)
-    return jsonify({'files': files[:200]})
+                files.append(
+                    {
+                        "name": f,
+                        "path": fp,
+                        "size": stat.st_size,
+                        "modified": datetime.fromtimestamp(stat.st_mtime).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                    }
+                )
+    files.sort(key=lambda x: x["modified"], reverse=True)
+    return jsonify({"files": files[:200]})
 
 
-@app.route('/api/backups/delete', methods=['POST'])
+@app.route("/api/backups/delete", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_delete_backup() -> Tuple:
     data = request.get_json(silent=True) or {}
-    path = str(data.get('path', ''))
+    path = str(data.get("path", ""))
     if not path or not os.path.isfile(path):
-        return jsonify({'error': '文件不存在'}), 404
+        return jsonify({"error": "文件不存在"}), 404
     if not _validate_path(path, allow_absolute=True):
-        return jsonify({'error': '路径不安全'}), 403
+        return jsonify({"error": "路径不安全"}), 403
     try:
         os.remove(path)
-        _add_log('info', f'已删除备份: {os.path.basename(path)}')
-        return jsonify({'success': True})
+        _add_log("info", f"已删除备份: {os.path.basename(path)}")
+        return jsonify({"success": True})
     except Exception as e:
-        return jsonify({'error': f'删除失败: {e}'}), 500
+        return jsonify({"error": f"删除失败: {e}"}), 500
 
 
-@app.route('/api/backups/clean', methods=['POST'])
+@app.route("/api/backups/clean", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_clean_backups() -> Dict:
-    converter = _get_state('converter')
+    converter = _get_state("converter")
     if not converter:
-        return jsonify({'error': '转换器未初始化'}), 400
+        return jsonify({"error": "转换器未初始化"}), 400
     try:
         config = converter.config
-        backup_dir = getattr(config, 'backup_dir', '.backup')
-        max_count = getattr(config, 'backup_max_count', 5)
-        max_age_days = getattr(config, 'backup_max_age_days', 30)
+        backup_dir = getattr(config, "backup_dir", ".backup")
+        max_count = getattr(config, "backup_max_count", 5)
+        max_age_days = getattr(config, "backup_max_age_days", 30)
         if not os.path.isdir(backup_dir):
-            return jsonify({'success': True, 'deleted': 0})
+            return jsonify({"success": True, "deleted": 0})
         deleted = 0
         now = time.time()
         max_age_seconds = max_age_days * 86400
@@ -1498,7 +1616,7 @@ def api_clean_backups() -> Dict:
                     continue
             except OSError:
                 continue
-            dir_files.setdefault('.', []).append(fp)
+            dir_files.setdefault(".", []).append(fp)
         if max_count > 0:
             for dir_key, files in dir_files.items():
                 files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
@@ -1508,286 +1626,293 @@ def api_clean_backups() -> Dict:
                         deleted += 1
                     except OSError:
                         pass
-        _add_log('info', f'已清理 {deleted} 个过期备份')
-        return jsonify({'success': True, 'deleted': deleted})
+        _add_log("info", f"已清理 {deleted} 个过期备份")
+        return jsonify({"success": True, "deleted": deleted})
     except Exception as e:
-        return jsonify({'error': f'清理失败: {e}'}), 500
+        return jsonify({"error": f"清理失败: {e}"}), 500
 
 
 # ============================================================================
 # 配置导入/导出 API
 # ============================================================================
 
-@app.route('/api/config/export')
+
+@app.route("/api/config/export")
 @require_api_token
 def api_export_config():
-    config = _get_state('config')
+    config = _get_state("config")
     if not config or not is_dataclass(config):
-        return jsonify({'error': '无配置可导出'}), 400
+        return jsonify({"error": "无配置可导出"}), 400
     try:
         content = json.dumps(asdict(config), ensure_ascii=False, indent=2)
         return send_file(
-            __import__('io').BytesIO(content.encode('utf-8')),
-            mimetype='application/json',
+            __import__("io").BytesIO(content.encode("utf-8")),
+            mimetype="application/json",
             as_attachment=True,
-            download_name='nfo_converter_config.json'
+            download_name="nfo_converter_config.json",
         )
     except Exception as e:
-        return jsonify({'error': f'导出失败: {e}'}), 500
+        return jsonify({"error": f"导出失败: {e}"}), 500
 
 
-@app.route('/api/config/import', methods=['POST'])
+@app.route("/api/config/import", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_import_config() -> Tuple:
     data = request.get_json(silent=True)
     if not data or not isinstance(data, dict):
-        return jsonify({'error': '请求体必须是 JSON 对象'}), 400
+        return jsonify({"error": "请求体必须是 JSON 对象"}), 400
     try:
         from nfo_to_vsmeta_converter_complete import Config
+
         validated, error = _validate_config_data(data)
         if error and not validated:
-            return jsonify({'error': error}), 400
+            return jsonify({"error": error}), 400
         config = Config(**validated)
-        _set_state('config', config)
-        converter = _get_state('converter')
+        _set_state("config", config)
+        converter = _get_state("converter")
         if converter:
             converter.config = config
-        _add_log('success', '配置已从 JSON 导入')
-        return jsonify({'success': True})
+        _add_log("success", "配置已从 JSON 导入")
+        return jsonify({"success": True})
     except TypeError as e:
-        return jsonify({'error': f'配置参数错误: {e}'}), 400
+        return jsonify({"error": f"配置参数错误: {e}"}), 400
     except Exception as e:
-        return jsonify({'error': f'导入失败: {e}'}), 500
+        return jsonify({"error": f"导入失败: {e}"}), 500
 
 
 # ============================================================================
 # 插件 API
 # ============================================================================
 
-@app.route('/api/plugins')
+
+@app.route("/api/plugins")
 @require_api_token
 def api_get_plugins() -> Dict:
-    converter = _get_state('converter')
+    converter = _get_state("converter")
     plugins = []
-    if converter and hasattr(converter, 'plugin_manager'):
+    if converter and hasattr(converter, "plugin_manager"):
         plugins = converter.plugin_manager.list_plugins()
-    return jsonify({'plugins': plugins})
+    return jsonify({"plugins": plugins})
 
 
-@app.route('/api/plugins/load', methods=['POST'])
+@app.route("/api/plugins/load", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_load_plugins() -> Tuple:
     data = request.get_json(silent=True)
     if not data or not isinstance(data, dict):
-        return jsonify({'error': '请求体不能为空'}), 400
-    directory = str(data.get('directory', 'plugins')).strip()
+        return jsonify({"error": "请求体不能为空"}), 400
+    directory = str(data.get("directory", "plugins")).strip()
     if not _validate_path(directory, allow_absolute=True):
-        return jsonify({'error': '插件目录路径不安全'}), 403
+        return jsonify({"error": "插件目录路径不安全"}), 403
     try:
         from nfo_to_vsmeta_converter_complete import Config, NFOToVSMETAConverter
-        converter = _get_state('converter')
+
+        converter = _get_state("converter")
         if not converter:
             converter = NFOToVSMETAConverter(Config())
-            _set_state('converter', converter)
+            _set_state("converter", converter)
         count = converter.plugin_manager.load_from_directory(directory)
-        _add_log('success', f'已从 {directory} 加载 {count} 个插件')
-        return jsonify({'success': True, 'count': count})
+        _add_log("success", f"已从 {directory} 加载 {count} 个插件")
+        return jsonify({"success": True, "count": count})
     except Exception as e:
-        _add_log('error', f'加载插件失败: {e}')
-        return jsonify({'error': f'加载插件失败: {e}'}), 500
+        _add_log("error", f"加载插件失败: {e}")
+        return jsonify({"error": f"加载插件失败: {e}"}), 500
 
 
-@app.route('/api/plugins/unload', methods=['POST'])
+@app.route("/api/plugins/unload", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_unload_plugin() -> Tuple:
     data = request.get_json(silent=True)
     if not data or not isinstance(data, dict):
-        return jsonify({'error': '请求体不能为空'}), 400
-    name = str(data.get('name', '')).strip()
+        return jsonify({"error": "请求体不能为空"}), 400
+    name = str(data.get("name", "")).strip()
     if not name:
-        return jsonify({'error': '插件名称不能为空'}), 400
-    converter = _get_state('converter')
-    if converter and hasattr(converter, 'plugin_manager'):
+        return jsonify({"error": "插件名称不能为空"}), 400
+    converter = _get_state("converter")
+    if converter and hasattr(converter, "plugin_manager"):
         converter.plugin_manager.unregister(name)
-        _add_log('info', f'已卸载插件: {name}')
-        return jsonify({'success': True})
-    return jsonify({'error': '转换器未初始化'}), 400
+        _add_log("info", f"已卸载插件: {name}")
+        return jsonify({"success": True})
+    return jsonify({"error": "转换器未初始化"}), 400
 
 
-@app.route('/api/plugins/<name>/config')
+@app.route("/api/plugins/<name>/config")
 @require_api_token
 def api_get_plugin_config(name: str) -> Dict:
     """获取指定插件的配置"""
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'plugin_manager'):
-        return jsonify({'error': '转换器未初始化'}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "plugin_manager"):
+        return jsonify({"error": "转换器未初始化"}), 400
     pm = converter.plugin_manager
     plugin = pm.get_plugin(name)
     if not plugin:
-        return jsonify({'error': f'插件 {name} 不存在'}), 404
+        return jsonify({"error": f"插件 {name} 不存在"}), 404
     config = pm.get_plugin_config(name)
     schema = {}
     try:
         schema = plugin.config_schema
     except Exception as e:
         logger.debug(f"获取插件 {name} 的配置 schema 失败: {e}")
-    return jsonify({
-        'name': name,
-        'config': config.get_all() if config else {},
-        'schema': schema
-    })
+    return jsonify({"name": name, "config": config.get_all() if config else {}, "schema": schema})
 
 
-@app.route('/api/plugins/<name>/config', methods=['POST'])
+@app.route("/api/plugins/<name>/config", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_set_plugin_config(name: str) -> Dict:
     """更新指定插件的配置"""
     data = request.get_json(silent=True)
     if not data or not isinstance(data, dict):
-        return jsonify({'error': '请求体不能为空'}), 400
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'plugin_manager'):
-        return jsonify({'error': '转换器未初始化'}), 400
+        return jsonify({"error": "请求体不能为空"}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "plugin_manager"):
+        return jsonify({"error": "转换器未初始化"}), 400
     pm = converter.plugin_manager
     if name not in pm._plugins:
-        return jsonify({'error': f'插件 {name} 不存在'}), 404
+        return jsonify({"error": f"插件 {name} 不存在"}), 404
     success = pm.update_plugin_config(name, data)
     if success:
-        _add_log('success', f'已更新插件 {name} 的配置')
-        return jsonify({'success': True})
-    return jsonify({'error': '更新配置失败'}), 500
+        _add_log("success", f"已更新插件 {name} 的配置")
+        return jsonify({"success": True})
+    return jsonify({"error": "更新配置失败"}), 500
 
 
-@app.route('/api/plugins/<name>/priority', methods=['POST'])
+@app.route("/api/plugins/<name>/priority", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_set_plugin_priority(name: str) -> Dict:
     """更新插件优先级"""
     data = request.get_json(silent=True)
-    if not data or 'priority' not in data:
-        return jsonify({'error': '缺少 priority 参数'}), 400
+    if not data or "priority" not in data:
+        return jsonify({"error": "缺少 priority 参数"}), 400
     try:
-        priority = int(data['priority'])
+        priority = int(data["priority"])
         if not 0 <= priority <= 100:
-            return jsonify({'error': '优先级范围 0-100'}), 400
+            return jsonify({"error": "优先级范围 0-100"}), 400
     except (ValueError, TypeError):
-        return jsonify({'error': 'priority 必须是整数'}), 400
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'plugin_manager'):
-        return jsonify({'error': '转换器未初始化'}), 400
+        return jsonify({"error": "priority 必须是整数"}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "plugin_manager"):
+        return jsonify({"error": "转换器未初始化"}), 400
     pm = converter.plugin_manager
     plugin = pm.get_plugin(name)
     if not plugin:
-        return jsonify({'error': f'插件 {name} 不存在'}), 404
+        return jsonify({"error": f"插件 {name} 不存在"}), 404
     try:
         plugin._plugin_priority = priority
-        _add_log('info', f'已更新插件 {name} 的优先级为 {priority}')
-        return jsonify({'success': True, 'priority': priority})
+        _add_log("info", f"已更新插件 {name} 的优先级为 {priority}")
+        return jsonify({"success": True, "priority": priority})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/plugins/hot-reload', methods=['POST'])
+@app.route("/api/plugins/hot-reload", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_toggle_hot_reload() -> Dict:
     """启用/禁用热重载"""
     data = request.get_json(silent=True) or {}
-    enabled = bool(data.get('enabled', False))
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'plugin_manager'):
-        return jsonify({'error': '转换器未初始化'}), 400
+    enabled = bool(data.get("enabled", False))
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "plugin_manager"):
+        return jsonify({"error": "转换器未初始化"}), 400
     pm = converter.plugin_manager
     if enabled:
-        config = _get_state('config')
-        plugin_dir = config.plugin_dir if config and hasattr(config, 'plugin_dir') else 'plugins'
+        config = _get_state("config")
+        plugin_dir = config.plugin_dir if config and hasattr(config, "plugin_dir") else "plugins"
         success = pm.enable_hot_reload(plugin_dir, config)
         if success:
-            _add_log('success', f'已启用插件热重载，监控目录: {plugin_dir}')
+            _add_log("success", f"已启用插件热重载，监控目录: {plugin_dir}")
         else:
-            _add_log('warning', '启用热重载失败，可能缺少 watchdog 库')
-        return jsonify({'enabled': success})
+            _add_log("warning", "启用热重载失败，可能缺少 watchdog 库")
+        return jsonify({"enabled": success})
     else:
         pm.disable_hot_reload()
-        _add_log('info', '已禁用插件热重载')
-        return jsonify({'enabled': False})
+        _add_log("info", "已禁用插件热重载")
+        return jsonify({"enabled": False})
 
 
-@app.route('/api/plugins/<name>/reload', methods=['POST'])
+@app.route("/api/plugins/<name>/reload", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_reload_plugin(name: str) -> Dict:
     """手动重载指定插件"""
-    converter = _get_state('converter')
-    if not converter or not hasattr(converter, 'plugin_manager'):
-        return jsonify({'error': '转换器未初始化'}), 400
+    converter = _get_state("converter")
+    if not converter or not hasattr(converter, "plugin_manager"):
+        return jsonify({"error": "转换器未初始化"}), 400
     pm = converter.plugin_manager
     success = pm.reload_plugin(name)
     if success:
-        _add_log('success', f'已手动重载插件: {name}')
-        return jsonify({'success': True})
-    return jsonify({'error': f'重载插件 {name} 失败'}), 500
+        _add_log("success", f"已手动重载插件: {name}")
+        return jsonify({"success": True})
+    return jsonify({"error": f"重载插件 {name} 失败"}), 500
 
 
-@app.route('/api/plugins/create', methods=['POST'])
+@app.route("/api/plugins/create", methods=["POST"])
 @require_api_token
 @require_csrf
 def api_create_plugin() -> Dict:
     """创建插件模板"""
     data = request.get_json(silent=True) or {}
-    name = str(data.get('name', '')).strip()
-    plugin_type = str(data.get('type', 'enhancer')).strip()
+    name = str(data.get("name", "")).strip()
+    plugin_type = str(data.get("type", "enhancer")).strip()
     if not name:
-        return jsonify({'error': '插件名称不能为空'}), 400
-    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_-]*$', name):
-        return jsonify({'error': '插件名称只能包含字母、数字、下划线和连字符，且不能以数字开头'}), 400
-    allowed_types = ('enhancer', 'parser', 'generator', 'filter', 'lifecycle')
+        return jsonify({"error": "插件名称不能为空"}), 400
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_-]*$", name):
+        return (
+            jsonify({"error": "插件名称只能包含字母、数字、下划线和连字符，且不能以数字开头"}),
+            400,
+        )
+    allowed_types = ("enhancer", "parser", "generator", "filter", "lifecycle")
     if plugin_type not in allowed_types:
-        return jsonify({'error': f'不支持的插件类型，可选: {", ".join(allowed_types)}'}), 400
+        return jsonify({"error": f'不支持的插件类型，可选: {", ".join(allowed_types)}'}), 400
     try:
         from nfo_to_vsmeta_converter_complete import create_plugin_template
+
         path = create_plugin_template(
             name=name,
             plugin_type=plugin_type,
-            author=str(data.get('author', 'Anonymous')),
-            version=str(data.get('version', '1.0.0')),
-            description=str(data.get('description', '')),
-            priority=int(data.get('priority', 50))
+            author=str(data.get("author", "Anonymous")),
+            version=str(data.get("version", "1.0.0")),
+            description=str(data.get("description", "")),
+            priority=int(data.get("priority", 50)),
         )
-        _add_log('success', f'已创建插件模板: {path}')
-        return jsonify({'success': True, 'path': path})
+        _add_log("success", f"已创建插件模板: {path}")
+        return jsonify({"success": True, "path": path})
     except Exception as e:
-        _add_log('error', f'创建插件模板失败: {e}')
-        return jsonify({'error': str(e)}), 500
+        _add_log("error", f"创建插件模板失败: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================================================================
 # 启动
 # ============================================================================
 
+
 def main() -> None:
     if not HAS_FLASK:
         print("错误: 请先安装 Flask: pip install flask")
         sys.exit(1)
-    parser = argparse.ArgumentParser(description='NFO to VSMETA 转换器 - Web UI v4.0')
-    parser.add_argument('--host', default='127.0.0.1', help='监听地址')
-    parser.add_argument('--port', type=int, default=5000, help='监听端口')
-    parser.add_argument('--debug', action='store_true', help='调试模式')
-    parser.add_argument('--token', default='', help='API 认证 Token')
+    parser = argparse.ArgumentParser(description="NFO to VSMETA 转换器 - Web UI v4.0")
+    parser.add_argument("--host", default="127.0.0.1", help="监听地址")
+    parser.add_argument("--port", type=int, default=5000, help="监听端口")
+    parser.add_argument("--debug", action="store_true", help="调试模式")
+    parser.add_argument("--token", default="", help="API 认证 Token")
     args = parser.parse_args()
 
     if args.token:
-        _state['api_token'] = args.token
+        _state["api_token"] = args.token
         print("⚠️  API 认证已启用")
-    if args.host == '0.0.0.0' and not args.token:
+    if args.host == "0.0.0.0" and not args.token:
         print("⚠️  警告: 绑定 0.0.0.0 且未设置 API Token，建议使用 --token")
 
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s', datefmt='%H:%M:%S'))
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="%H:%M:%S")
+    )
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
 
@@ -1802,5 +1927,5 @@ def main() -> None:
     app.run(host=args.host, port=args.port, debug=args.debug)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
