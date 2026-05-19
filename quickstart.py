@@ -14,7 +14,13 @@ from pathlib import Path
 
 def clear_screen():
     """清除屏幕"""
-    os.system('cls' if os.name == 'nt' else 'clear')
+    import shutil
+    try:
+        shutil.get_terminal_size()
+        columns = shutil.get_terminal_size().columns
+        print('\n' * 50)
+    except Exception:
+        print('\n' * 50)
 
 
 def print_header():

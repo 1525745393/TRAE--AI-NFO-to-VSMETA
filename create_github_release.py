@@ -79,7 +79,7 @@ def create_release(token, owner, repo, tag, name, body, files):
     }
 
     print(f"创建 Release: {tag}...")
-    response = requests.post(release_url, headers=headers, json=release_data)
+    response = requests.post(release_url, headers=headers, json=release_data, timeout=30)
 
     if response.status_code == 201:
         release = response.json()
@@ -89,7 +89,7 @@ def create_release(token, owner, repo, tag, name, body, files):
     elif response.status_code == 422:
         print("⚠️  Release 已存在，尝试获取现有 Release...")
         # 尝试获取现有 Release
-        response = requests.get(f"{release_url}/tags/{tag}", headers=headers)
+        response = requests.get(f"{release_url}/tags/{tag}", headers=headers, timeout=30)
         if response.status_code == 200:
             release = response.json()
             print(f"找到现有 Release: {release['html_url']}")
@@ -125,7 +125,8 @@ def create_release(token, owner, repo, tag, name, body, files):
                     upload_url,
                     headers=file_headers,
                     params=params,
-                    data=f
+                    data=f,
+                    timeout=60
                 )
 
             if upload_response.status_code == 201:

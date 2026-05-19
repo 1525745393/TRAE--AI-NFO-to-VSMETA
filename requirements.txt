@@ -18,6 +18,9 @@ readchar>=2.0.0
 # 文件监控 - 用于插件热重载功能
 watchdog>=3.0.0
 
+# XML 安全解析 - 防止 XXE 攻击
+defusedxml>=0.7.1
+
 # === Web UI 依赖 ===
 
 # Web 框架 - 用于 Web UI 界面

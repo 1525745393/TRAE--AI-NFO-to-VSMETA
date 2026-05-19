@@ -619,10 +619,16 @@ class NFOParser:
                 return None
 
             # === 从字符串解析 XML ===
-            # 防止 XML 外部实体（XXE）攻击
-            parser = ET.XMLParser()
-            parser.entity = {}  # 禁用实体处理，防止 XXE
-            root = ET.fromstring(content, parser=parser)
+            # 使用 defusedxml 防止 XML 外部实体（XXE）攻击
+            try:
+                from defusedxml import ElementTree as DefusedET
+                root = DefusedET.fromstring(content)
+            except ImportError:
+                # 如果 defusedxml 未安装，使用标准库并禁用实体处理
+                logger.warning("defusedxml 未安装，使用标准库 XML 解析（安全性降低）")
+                parser = ET.XMLParser()
+                parser.entity = {}
+                root = ET.fromstring(content, parser=parser)
             return self._extract_metadata(root, nfo_path)
         except ET.ParseError as e:
             logger.error(f"解析 NFO 文件失败 {nfo_path}: {e}")

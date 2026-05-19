@@ -1187,9 +1187,15 @@ def api_validate_nfo() -> Tuple:
     if not _validate_path(path, allow_absolute=True):
         return jsonify({'error': '路径不安全'}), 403
     try:
-        import xml.etree.ElementTree as ET
-        tree = ET.parse(path)
-        root = tree.getroot()
+        try:
+            from defusedxml import ElementTree as DefusedET
+            tree = DefusedET.parse(path)
+            root = tree.getroot()
+        except ImportError:
+            logger.warning("defusedxml 未安装，使用标准库 XML 解析")
+            import xml.etree.ElementTree as ET
+            tree = ET.parse(path)
+            root = tree.getroot()
         result = {'valid': True}
         # 提取常用字段
         for field in ['title', 'year', 'rating', 'plot', 'runtime']:

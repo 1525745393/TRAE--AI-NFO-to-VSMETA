@@ -34,9 +34,14 @@ def run_command(cmd, description, check=True):
     print(f"命令: {cmd}\n")
 
     try:
+        import shlex
+        if isinstance(cmd, str):
+            cmd_list = shlex.split(cmd)
+        else:
+            cmd_list = cmd
         result = subprocess.run(
-            cmd,
-            shell=True,
+            cmd_list,
+            shell=False,
             check=check,
             capture_output=True,
             text=True
@@ -107,11 +112,13 @@ def check_code_quality():
     ]
 
     all_passed = True
+    import shlex
     for tool, name in checks:
         try:
+            cmd_list = shlex.split(f"{sys.executable} -m {tool} nfo_to_vsmeta_converter_complete.py")
             result = subprocess.run(
-                f"{sys.executable} -m {tool} nfo_to_vsmeta_converter_complete.py",
-                shell=True,
+                cmd_list,
+                shell=False,
                 capture_output=True,
                 text=True
             )

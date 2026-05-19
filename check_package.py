@@ -159,8 +159,10 @@ def extract_and_check(tar_path):
     print("🔍 解压检查源码包")
     print("="*60)
     
-    extract_dir = Path('/tmp/nfo_package_check')
-    extract_dir.mkdir(exist_ok=True)
+    import tempfile
+    import uuid
+    extract_dir = Path(tempfile.gettempdir()) / f"nfo_package_check_{uuid.uuid4().hex[:8]}"
+    extract_dir.mkdir(exist_ok=True, parents=True)
     
     try:
         with tarfile.open(tar_path, 'r:gz') as tar:
