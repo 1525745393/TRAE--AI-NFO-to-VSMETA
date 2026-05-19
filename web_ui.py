@@ -344,7 +344,7 @@ def _update_progress(updates: Dict) -> None:
 # ============================================================================
 
 
-@app.errorhandler(Exception)
+@app.errorhandler(Exception)  # type: ignore[union-attr]
 def handle_exception(e: Exception) -> Tuple:
     logger.error(f"未捕获异常: {e}", exc_info=True)
     return (
@@ -353,17 +353,17 @@ def handle_exception(e: Exception) -> Tuple:
     )
 
 
-@app.errorhandler(400)
+@app.errorhandler(400)  # type: ignore[union-attr]
 def handle_bad_request(e) -> Tuple:
     return jsonify({"error": "请求参数错误", "detail": str(e)}), 400
 
 
-@app.errorhandler(404)
+@app.errorhandler(404)  # type: ignore[union-attr]
 def handle_not_found(e) -> Tuple:
     return jsonify({"error": "资源不存在"}), 404
 
 
-@app.errorhandler(405)
+@app.errorhandler(405)  # type: ignore[union-attr]
 def handle_method_not_allowed(e) -> Tuple:
     return jsonify({"error": "请求方法不允许"}), 405
 
@@ -893,12 +893,12 @@ INDEX_HTML = r"""<!DOCTYPE html>
 # ============================================================================
 
 
-@app.route("/")
+@app.route("/")  # type: ignore[union-attr]
 def index() -> str:
     return render_template_string(INDEX_HTML)
 
 
-@app.route("/api/status")
+@app.route("/api/status")  # type: ignore[union-attr]
 @require_api_token
 def api_status() -> Dict:
     with _state_lock:

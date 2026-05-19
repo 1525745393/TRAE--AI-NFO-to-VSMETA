@@ -1920,7 +1920,7 @@ class PluginManager:
         self._global_config = None
         self._file_hashes: Dict[str, str] = {}  # filepath -> md5 hash
 
-    def register(self, plugin: Plugin, global_config: "Config" = None) -> None:
+    def register(self, plugin: Plugin, global_config: Optional["Config"] = None) -> None:
         """
         注册插件，根据类型自动分类，支持优先级排序
 
@@ -2037,7 +2037,7 @@ class PluginManager:
 
         logger.info(f"插件已注销: {name}")
 
-    def load_from_directory(self, plugin_dir: str, global_config: "Config" = None) -> int:
+    def load_from_directory(self, plugin_dir: str, global_config: Optional["Config"] = None) -> int:
         """
         从目录加载 .py 插件文件，支持依赖管理和拓扑排序
 
@@ -2102,8 +2102,8 @@ class PluginManager:
 
         # 构建依赖图
         in_degree = {name: 0 for name in name_to_class}
-        graph = {name: [] for name in name_to_class}
-        missing_deps = {}
+        graph: Dict[str, List[str]] = {name: [] for name in name_to_class}
+        missing_deps: Dict[str, str] = {}
 
         for name, cls in name_to_class.items():
             try:
@@ -2360,7 +2360,7 @@ class PluginManager:
 
     # ==================== 热重载功能 ====================
 
-    def enable_hot_reload(self, plugin_dir: str, global_config: "Config" = None) -> bool:
+    def enable_hot_reload(self, plugin_dir: str, global_config: Optional["Config"] = None) -> bool:
         """
         启用插件热重载
 
@@ -3446,7 +3446,7 @@ th{{background:#f2f2f2;}}</style></head><body>
         """导出智能分析报告（支持 html/csv/txt 格式）"""
 
         # 统计失败原因
-        error_types = {}
+        error_types: Dict[str, int] = {}
         for detail in self.report_details:
             if detail["result"] != "success":
                 error_types[detail["result"]] = error_types.get(detail["result"], 0) + 1
@@ -3543,7 +3543,7 @@ th{{background:#f2f2f2;}}</style></head><body>
 # ============================================================================
 
 
-def _prompt_int(prompt: str, default: int, min_val: int = None, max_val: int = None) -> int:
+def _prompt_int(prompt: str, default: int, min_val: Optional[int] = None, max_val: Optional[int] = None) -> int:
     """带验证的整数输入"""
     value = input(f"{prompt}（默认 {default}）: ").strip()
     if not value:
@@ -3560,7 +3560,7 @@ def _prompt_int(prompt: str, default: int, min_val: int = None, max_val: int = N
 
 
 def _prompt_float(
-    prompt: str, default: float, min_val: float = None, max_val: float = None
+    prompt: str, default: float, min_val: Optional[float] = None, max_val: Optional[float] = None
 ) -> float:
     """带验证的浮点数输入"""
     value = input(f"{prompt}（默认 {default}）: ").strip()
